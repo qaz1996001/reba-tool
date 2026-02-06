@@ -69,6 +69,18 @@ ApplicationWindow {
         }
     }
 
+    FileDialog {
+        id: saveImageDialog
+        title: "保存標註影像"
+        nameFilters: ["PNG圖片 (*.png)", "JPEG圖片 (*.jpg *.jpeg)", "所有檔案 (*)"]
+        fileMode: FileDialog.SaveFile
+        onAccepted: {
+            var path = selectedFile.toString().replace(/^file:\/\/\//, "");
+            path = decodeURIComponent(path);
+            videoBridge.saveImage(path);
+        }
+    }
+
     // ========== 主佈局 ==========
     RowLayout {
         anchors.fill: parent
@@ -94,6 +106,7 @@ ApplicationWindow {
             showAngleValues: settingsBridge.showAngleValues
             logMessages: dataBridge.logMessages
             hasVideoSource: videoBridge.videoSource.length > 0
+            isRecording: videoBridge.isRecording
 
             onCameraClicked: {
                 dataBridge.log("正在開啟攝影機...");
@@ -111,6 +124,13 @@ ApplicationWindow {
                 dataBridge.log("正在停止處理...");
                 videoBridge.stop();
             }
+            onRecordToggled: {
+                if (videoBridge.isRecording) {
+                    videoBridge.stopRecording();
+                } else {
+                    videoBridge.startRecording();
+                }
+            }
             onSeekRequested: function(frame) {
                 videoBridge.seekFrame(frame);
             }
@@ -122,8 +142,18 @@ ApplicationWindow {
                 settingsBridge.setShowAngleValues(checked);
                 videoBridge.setDisplayOptions(settingsBridge.showAngleLines, settingsBridge.showAngleValues);
             }
-            onSaveCsvClicked: saveCsvDialog.open()
-            onSaveJsonClicked: saveJsonDialog.open()
+            onSaveCsvClicked: {
+                saveCsvDialog.currentFile = "file:///" + videoBridge.suggestFilePath("csv");
+                saveCsvDialog.open();
+            }
+            onSaveJsonClicked: {
+                saveJsonDialog.currentFile = "file:///" + videoBridge.suggestFilePath("json");
+                saveJsonDialog.open();
+            }
+            onSaveImageClicked: {
+                saveImageDialog.currentFile = "file:///" + videoBridge.suggestFilePath("image");
+                saveImageDialog.open();
+            }
         }
 
         // 右側面板
@@ -131,7 +161,7 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.preferredWidth: Style.Theme.rightRatio
-            Layout.minimumWidth: 400
+            Layout.minimumWidth: 300
 
             rebaScore: rebaBridge.rebaScore
             riskLevelZh: rebaBridge.riskLevelZh
@@ -160,7 +190,17 @@ ApplicationWindow {
                 dataBridge.log(locked ? "資料已鎖定" : "資料已解鎖");
             }
             onTableCClicked: {
-                tableCDialog.open();
+                var screen = window.screen;
+                tableCDialog.positionToRight(
+                    window.x, window.y, window.width, window.height,
+                    screen.virtualX + screen.width,
+                    screen.virtualX,
+                    screen.virtualY,
+                    screen.virtualY + screen.height
+                );
+                tableCDialog.show();
+                tableCDialog.raise();
+                tableCDialog.requestActivate();
             }
             onCopyDataClicked: {
                 var text = dataBridge.getCopyText();
@@ -214,6 +254,18 @@ ApplicationWindow {
             }
             function onErrorOccurred(msg) {
                 statusText.text = "錯誤: " + msg;
+            }
+            function onImageSaved(path) {
+                dataBridge.log("影像已保存: " + path.split("/").pop());
+                statusText.text = "影像已保存";
+            }
+            function onRecordingStarted() {
+                dataBridge.log("錄影開始");
+                statusText.text = "錄影中...";
+            }
+            function onRecordingStopped(path) {
+                dataBridge.log("影片已保存: " + path.split("/").pop());
+                statusText.text = "影片已保存";
             }
         }
     }

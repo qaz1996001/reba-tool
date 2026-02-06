@@ -22,17 +22,20 @@ ColumnLayout {
     property bool showAngleValues: true
     property var logMessages: []
     property bool hasVideoSource: false
+    property bool isRecording: false
 
     // 信號
     signal cameraClicked()
     signal videoClicked()
     signal pauseClicked()
     signal stopClicked()
+    signal recordToggled()
     signal seekRequested(int frame)
     signal showAngleLinesToggled(bool checked)
     signal showAngleValuesToggled(bool checked)
     signal saveCsvClicked()
     signal saveJsonClicked()
+    signal saveImageClicked()
 
     // 影片顯示
     Components.VideoDisplay {
@@ -48,10 +51,12 @@ ColumnLayout {
         Layout.fillWidth: true
         isProcessing: root.isProcessing
         isPaused: root.isPaused
+        isRecording: root.isRecording
         onCameraClicked: root.cameraClicked()
         onVideoClicked: root.videoClicked()
         onPauseClicked: root.pauseClicked()
         onStopClicked: root.stopClicked()
+        onRecordToggled: root.recordToggled()
     }
 
     // 進度條
@@ -72,6 +77,7 @@ ColumnLayout {
         onAngleValuesToggled: function(checked) { root.showAngleValuesToggled(checked) }
         onSaveCsvClicked: root.saveCsvClicked()
         onSaveJsonClicked: root.saveJsonClicked()
+        onSaveImageClicked: root.saveImageClicked()
     }
 
     // 底部資訊區

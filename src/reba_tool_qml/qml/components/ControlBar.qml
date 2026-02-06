@@ -10,11 +10,13 @@ RowLayout {
 
     property bool isProcessing: false
     property bool isPaused: false
+    property bool isRecording: false
 
     signal cameraClicked()
     signal videoClicked()
     signal pauseClicked()
     signal stopClicked()
+    signal recordToggled()
 
     Button {
         id: btnCamera
@@ -86,6 +88,32 @@ RowLayout {
             text: btnPause.text
             font: btnPause.font
             color: Style.Theme.buttonText
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
+
+    Button {
+        id: btnRecord
+        text: root.isRecording ? "停止錄影" : "錄影"
+        font.family: Style.Theme.fontFamily
+        font.pixelSize: Style.Theme.buttonFontSize
+        enabled: root.isProcessing
+        Layout.fillWidth: true
+        onClicked: root.recordToggled()
+
+        background: Rectangle {
+            color: root.isRecording ? "#cc3333"
+                   : btnRecord.pressed ? Style.Theme.buttonPressed
+                   : btnRecord.hovered ? Style.Theme.buttonHover
+                   : Style.Theme.buttonBg
+            border.color: root.isRecording ? "#ff4444" : Style.Theme.border
+            radius: 4
+        }
+        contentItem: Text {
+            text: btnRecord.text
+            font: btnRecord.font
+            color: root.isRecording ? "#ffffff" : Style.Theme.buttonText
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }

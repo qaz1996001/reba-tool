@@ -5,10 +5,14 @@
 收到 VideoWorker.frame_ready → 更新 image_provider → 遞增 frameCounter。
 """
 
+import os
+from datetime import datetime
+
 from PySide6.QtCore import QObject, Property, Signal, Slot
 
 from video_controller import VideoController
 from ui.video_worker import VideoWorker
+from bridge.video_recorder import VideoRecorder
 
 
 class VideoBridge(QObject):
@@ -30,6 +34,12 @@ class VideoBridge(QObject):
     # 處理結束
     processingFinished = Signal()
     errorOccurred = Signal(str)
+    imageSaved = Signal(str)
+
+    # 錄影狀態
+    isRecordingChanged = Signal()
+    recordingStarted = Signal()
+    recordingStopped = Signal(str)
 
     def __init__(self, image_provider, parent=None):
         super().__init__(parent)
@@ -42,6 +52,8 @@ class VideoBridge(QObject):
         self._total_frames = 0
         self._current_frame = 0
         self._video_source = ""
+        self._recorder = VideoRecorder()
+        self._auto_recording = False  # 全程自動錄影旗標
 
     # ========== Properties ==========
 
@@ -78,6 +90,10 @@ class VideoBridge(QObject):
     @Property(str, notify=videoSourceChanged)
     def videoSource(self):
         return self._video_source
+
+    @Property(bool, notify=isRecordingChanged)
+    def isRecording(self):
+        return self._recorder.is_recording
 
     # ========== 暴露 controller 給其他 bridge ==========
 
@@ -153,6 +169,56 @@ class VideoBridge(QObject):
         """即時更新顯示選項"""
         self._controller.set_display_options(show_lines, show_values)
 
+    @Slot(str)
+    def saveImage(self, path):
+        """保存當前標註影像"""
+        img = self._image_provider.get_current_image()
+        if img is None or img.isNull():
+            self.errorOccurred.emit("無可保存的影像")
+            return
+        if img.save(path):
+            self.imageSaved.emit(path)
+        else:
+            self.errorOccurred.emit("影像保存失敗: " + path)
+
+    @Slot(str, result=str)
+    def suggestFilePath(self, file_type):
+        """根據類型生成建議檔案路徑"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        results_dir = os.path.join(os.getcwd(), "results")
+        os.makedirs(results_dir, exist_ok=True)
+
+        names = {
+            "image": f"reba_frame_{timestamp}.png",
+            "video": f"reba_video_{timestamp}.mp4",
+            "csv": f"reba_analysis_{timestamp}.csv",
+            "json": f"reba_stats_{timestamp}.json",
+        }
+        filename = names.get(file_type, f"reba_{timestamp}.dat")
+        return os.path.join(results_dir, filename).replace("\\", "/")
+
+    @Slot()
+    def startRecording(self):
+        """手動開始錄影片段"""
+        if self._recorder.is_recording:
+            return
+        path = self.suggestFilePath("video")
+        fps = self._fps if self._fps > 0 else 30.0
+        self._recorder.start(path, fps)
+        self._auto_recording = False
+        self.isRecordingChanged.emit()
+        self.recordingStarted.emit()
+
+    @Slot()
+    def stopRecording(self):
+        """手動停止錄影"""
+        if not self._recorder.is_recording:
+            return
+        path = self._recorder.stop()
+        self._auto_recording = False
+        self.isRecordingChanged.emit()
+        self.recordingStopped.emit(path)
+
     # ========== 內部方法 ==========
 
     def _start_processing(self, video_source,
@@ -169,6 +235,13 @@ class VideoBridge(QObject):
         self.frameCounterChanged.emit()
         self.isProcessingChanged.emit()
 
+        # 自動開始全程錄影
+        auto_path = self.suggestFilePath("video")
+        self._recorder.start(auto_path, 30.0)
+        self._auto_recording = True
+        self.isRecordingChanged.emit()
+        self.recordingStarted.emit()
+
         # 建立 QThread worker（直接複用 reba_tool 的 VideoWorker）
         self._worker = VideoWorker(
             self._controller.pipeline,
@@ -184,6 +257,10 @@ class VideoBridge(QObject):
         """收到工作線程的幀資料"""
         # 記錄資料
         self._controller.record_frame(frame, angles, reba_score, risk_level, fps, details)
+
+        # 錄影：寫入標註幀
+        if self._recorder.is_recording:
+            self._recorder.write_frame(frame)
 
         # 更新影像提供者
         self._image_provider.update_frame(frame)
@@ -202,6 +279,13 @@ class VideoBridge(QObject):
 
     def _on_finished(self):
         """處理完成"""
+        # 自動停止錄影（全程模式）
+        if self._recorder.is_recording and self._auto_recording:
+            path = self._recorder.stop()
+            self._auto_recording = False
+            self.isRecordingChanged.emit()
+            self.recordingStopped.emit(path)
+
         self._controller.on_processing_finished()
         self.isProcessingChanged.emit()
         self.isPausedChanged.emit()
@@ -233,6 +317,8 @@ class VideoBridge(QObject):
 
     def cleanup(self):
         """清理資源（視窗關閉時呼叫）"""
+        if self._recorder.is_recording:
+            self._recorder.stop()
         if self._worker and self._worker.isRunning():
             self._controller.stop()
             self._worker.wait()
