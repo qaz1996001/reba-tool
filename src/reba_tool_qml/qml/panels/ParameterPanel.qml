@@ -87,6 +87,20 @@ GroupBox {
             }
 
             onValueChanged: root.loadWeightEdited(realValue)
+
+            contentItem: TextInput {
+                text: spinLoad.textFromValue(spinLoad.value, spinLoad.locale)
+                font: spinLoad.font
+                color: Style.Theme.text
+                selectionColor: Style.Theme.accent
+                selectedTextColor: Style.Theme.background
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+                readOnly: !spinLoad.editable
+                validator: spinLoad.validator
+                inputMethodHints: Qt.ImhFormattedNumbersOnly
+                leftPadding: 8
+            }
         }
 
         Text {
