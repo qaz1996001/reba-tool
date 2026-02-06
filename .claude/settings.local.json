@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(python -c \"\ncontent = ''@echo off\\\\r\\\\necho \\\\u7576\\\\u524d\\\\u76ee\\\\u9304\\\\uff1a%cd%\\\\r\\\\ncall uv run .\\\\src\\\\reba_tool\\\\MediaPipeApp.py\\\\r\\\\npause\\\\r\\\\n''\nwith open\\(r''D:\\\\93_Hsu-Yao-Wen\\\\reba-tool\\\\start.bat'', ''wb''\\) as f:\n    f.write\\(content.encode\\(''big5''\\)\\)\nprint\\(''Done''\\)\n\")",
+      "Bash(python:*)"
+    ]
+  }
+}
