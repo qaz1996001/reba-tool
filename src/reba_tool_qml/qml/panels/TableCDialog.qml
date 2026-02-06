@@ -1,23 +1,33 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import QtQuick.Window 2.15
 import "../style" as Style
 
-Dialog {
+Window {
     id: root
 
     title: "REBA Table C - Score A \u00d7 Score B \u2192 Score C"
-    width: 650
-    height: 500
-    modal: false
+    width: 800
+    height: 600
+    flags: Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint
+    color: Style.Theme.surface
 
-    // tableCModel 由 rootContext 提供
-    property var tableCModel: null
+    // tcModel 由 main.qml 傳入（不可用 tableCModel 作為 property 名，會遮蔽同名 context property）
+    property var tcModel: null
 
-    background: Rectangle {
-        color: Style.Theme.surface
-        border.color: Style.Theme.border
-        radius: 4
+    // 定位到主視窗右側（垂直置中），超出螢幕則改左側
+    function positionToRight(winX, winY, winW, winH, screenRight, screenLeft, screenTop, screenBottom) {
+        var newX = winX + winW + 10;
+        var newY = winY + (winH - root.height) / 2;
+        if (newX + root.width > screenRight)
+            newX = winX - root.width - 10;
+        if (newY < screenTop)
+            newY = screenTop;
+        if (newY + root.height > screenBottom)
+            newY = screenBottom - root.height;
+        root.x = newX;
+        root.y = newY;
     }
 
     ColumnLayout {
@@ -48,38 +58,41 @@ Dialog {
                 Rectangle {
                     property int row: Math.floor(index / 13)
                     property int col: index % 13
+                    // 引用 scoreA/scoreB 建立響應式依賴，分數變化時所有 binding 重新求值
+                    property int _sa: root.tcModel ? root.tcModel.scoreA : 0
+                    property int _sb: root.tcModel ? root.tcModel.scoreB : 0
 
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
                     color: {
-                        if (!root.tableCModel) return Style.Theme.surface;
-                        var c = root.tableCModel.data(root.tableCModel.index(row, col), 257);
-                        return c ? c : Style.Theme.surface;
+                        var dep = _sa + _sb;
+                        if (!root.tcModel) return Style.Theme.surface;
+                        return root.tcModel.cellBgColor(row, col) || Style.Theme.surface;
                     }
 
                     Text {
                         anchors.centerIn: parent
                         text: {
-                            if (!root.tableCModel) return "";
-                            var val = root.tableCModel.data(root.tableCModel.index(row, col), 0);
-                            return val ? val : "";
+                            var dep = parent._sa + parent._sb;
+                            if (!root.tcModel) return "";
+                            return root.tcModel.cellText(row, col);
                         }
                         font.family: Style.Theme.fontFamily
                         font.pixelSize: {
-                            if (!root.tableCModel) return 10;
-                            var s = root.tableCModel.data(root.tableCModel.index(row, col), 259);
-                            return s ? s : 10;
+                            var dep = parent._sa + parent._sb;
+                            if (!root.tcModel) return 10;
+                            return root.tcModel.cellFontSize(row, col);
                         }
                         font.bold: {
-                            if (!root.tableCModel) return false;
-                            var b = root.tableCModel.data(root.tableCModel.index(row, col), 258);
-                            return b ? true : false;
+                            var dep = parent._sa + parent._sb;
+                            if (!root.tcModel) return false;
+                            return root.tcModel.cellBold(row, col);
                         }
                         color: {
-                            if (!root.tableCModel) return Style.Theme.text;
-                            var fg = root.tableCModel.data(root.tableCModel.index(row, col), 260);
-                            return fg ? fg : Style.Theme.text;
+                            var dep = parent._sa + parent._sb;
+                            if (!root.tcModel) return Style.Theme.text;
+                            return root.tcModel.cellFgColor(row, col) || Style.Theme.text;
                         }
                     }
                 }
@@ -100,8 +113,8 @@ Dialog {
 
             Repeater {
                 model: [
-                    { color: "#10b981", label: "1 可忽略" },
-                    { color: "#34d399", label: "2-3 低風險" },
+                    { color: "#047857", label: "1 可忽略" },
+                    { color: "#059669", label: "2-3 低風險" },
                     { color: "#fbbf24", label: "4-7 中風險" },
                     { color: "#f43f5e", label: "8-10 高風險" },
                     { color: "#ff0000", label: "11-12 極高風險" }

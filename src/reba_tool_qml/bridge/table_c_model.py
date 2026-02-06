@@ -111,8 +111,8 @@ class TableCModel(QAbstractTableModel):
         # === Font Size ===
         if role == self.FontSizeRole:
             if is_intersection and not is_header_row and not is_header_col:
-                return 14
-            return 10
+                return 16
+            return 14
 
         return None
 
@@ -120,9 +120,9 @@ class TableCModel(QAbstractTableModel):
     def _get_score_color(score):
         """根據分數取得對應顏色"""
         if score == 1:
-            return "#10b981"
+            return "#047857"
         elif score <= 3:
-            return "#34d399"
+            return "#059669"
         elif score <= 7:
             return "#fbbf24"
         elif score <= 10:
@@ -165,7 +165,7 @@ class TableCModel(QAbstractTableModel):
         """QML 用：取得 cell 字號"""
         idx = self.index(row, col)
         v = self.data(idx, self.FontSizeRole)
-        return v if v else 10
+        return v if v else 16
 
     # ========== Score Properties ==========
 

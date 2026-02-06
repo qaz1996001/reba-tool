@@ -93,12 +93,13 @@ def main():
     def _on_frame_for_table(frame, angles, reba_score, risk_level, fps, details):
         score_table_model.update_data(angles, details)
         data_bridge.update_record_count()
-        # 更新 Table C 高亮
-        if details:
-            sa = details.get('score_a')
-            sb = details.get('score_b')
-            if sa and sb:
-                table_c_model.updateScores(sa, sb)
+        # 更新 Table C 高亮（無有效分數時清除）
+        sa = details.get('score_a') if details else None
+        sb = details.get('score_b') if details else None
+        if sa and sb:
+            table_c_model.updateScores(sa, sb)
+        else:
+            table_c_model.updateScores(0, 0)
 
     video_bridge.frameProcessed.connect(_on_frame_for_table)
 

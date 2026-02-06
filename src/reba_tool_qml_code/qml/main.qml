@@ -53,6 +53,7 @@ ApplicationWindow {
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.minimumHeight: 300
             spacing: 0
 
             // 影片區（彈性填充）
@@ -73,7 +74,8 @@ ApplicationWindow {
         // ── 中間/底部分隔線 ──
         Rectangle {
             Layout.fillWidth: true
-            height: 1
+            Layout.preferredHeight: 1
+            Layout.maximumHeight: 1
             color: Style.Theme.borderNavy
         }
 
@@ -83,6 +85,7 @@ ApplicationWindow {
         RowLayout {
             Layout.fillWidth: true
             Layout.preferredHeight: Style.Theme.bottomHeight
+            Layout.maximumHeight: Style.Theme.bottomHeight
             spacing: 0
 
             // 左欄：關節角度表（25%）
