@@ -1,13 +1,11 @@
 {
     "name": "預設主題",
-
     "window": {
         "x": 100,
         "y": 100,
         "width": 1400,
         "height": 900
     },
-
     "colors": {
         "background": "#f0f0f0",
         "surface": "#ffffff",
@@ -31,7 +29,6 @@
         "logBackground": "#ffffff",
         "logText": "#333333"
     },
-
     "risk_colors": {
         "negligible": "#00FF00",
         "low": "#90EE90",
@@ -40,7 +37,6 @@
         "very_high": "#FF0000",
         "unknown": "#FFFFFF"
     },
-
     "fonts": {
         "family": "Microsoft YaHei",
         "button_size": 18,
@@ -60,19 +56,22 @@
         "video_hint_size": 16,
         "log_text_size": 10
     },
-
     "video": {
         "min_width": 600,
         "min_height": 450,
         "border_width": 2
     },
-
     "table": {
         "row_height": 28,
         "header_height": 32,
-        "column_ratios": [3, 2, 1, 3, 2]
+        "column_ratios": [
+            3,
+            2,
+            1,
+            3,
+            2
+        ]
     },
-
     "layout": {
         "left_ratio": 16,
         "right_ratio": 9,

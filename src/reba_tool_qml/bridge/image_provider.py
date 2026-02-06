@@ -43,6 +43,18 @@ class VideoImageProvider(QQuickImageProvider):
                 QImage.Format_RGB888
             )
 
+    def get_current_image(self):
+        """
+        取得當前影像幀的副本
+
+        Returns:
+            QImage: 當前影像副本，若無影像則回傳 None
+        """
+        with self._lock:
+            if self._image.isNull():
+                return None
+            return self._image.copy()
+
     def requestImage(self, id_str, size, requested_size):
         """
         QML 請求影像時呼叫

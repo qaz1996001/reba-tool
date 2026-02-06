@@ -19,7 +19,7 @@ ApplicationWindow {
     // ========== Table C Dialog ==========
     Panels.TableCDialog {
         id: tableCDialog
-        tableCModel: tableCModel
+        tcModel: tableCModel
     }
 
     // ========== File Dialogs ==========

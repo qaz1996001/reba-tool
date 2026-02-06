@@ -15,6 +15,7 @@ RowLayout {
     signal angleValuesToggled(bool checked)
     signal saveCsvClicked()
     signal saveJsonClicked()
+    signal saveImageClicked()
 
     CheckBox {
         id: checkLines
@@ -79,6 +80,28 @@ RowLayout {
         font.family: Style.Theme.fontFamily
         font.pixelSize: Style.Theme.buttonFontSize
         onClicked: root.saveJsonClicked()
+
+        background: Rectangle {
+            color: parent.pressed ? Style.Theme.buttonPressed
+                   : parent.hovered ? Style.Theme.buttonHover
+                   : Style.Theme.buttonBg
+            border.color: Style.Theme.border
+            radius: 4
+        }
+        contentItem: Text {
+            text: parent.text
+            font: parent.font
+            color: Style.Theme.buttonText
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
+
+    Button {
+        text: "保存影像"
+        font.family: Style.Theme.fontFamily
+        font.pixelSize: Style.Theme.buttonFontSize
+        onClicked: root.saveImageClicked()
 
         background: Rectangle {
             color: parent.pressed ? Style.Theme.buttonPressed

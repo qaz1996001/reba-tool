@@ -16,8 +16,19 @@ RowLayout {
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 50
-        color: root.rebaScore > 0 ? root.riskColor : "transparent"
+        color: Style.Theme.surface
         radius: 4
+        border.color: root.rebaScore > 0 ? root.riskColor : Style.Theme.border
+        border.width: root.rebaScore > 0 ? 2 : 1
+
+        // 左側色條
+        Rectangle {
+            width: 4
+            height: parent.height
+            color: root.rebaScore > 0 ? root.riskColor : "transparent"
+            anchors.left: parent.left
+            radius: 2
+        }
 
         Text {
             anchors.centerIn: parent
@@ -25,7 +36,7 @@ RowLayout {
             font.family: Style.Theme.fontFamily
             font.pixelSize: Style.Theme.rebaScoreFontSize
             font.bold: true
-            color: Style.Theme.text
+            color: root.rebaScore > 0 ? root.riskColor : Style.Theme.textSecondary
         }
     }
 
@@ -33,15 +44,26 @@ RowLayout {
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 50
-        color: root.rebaScore > 0 ? root.riskColor : "transparent"
+        color: Style.Theme.surface
         radius: 4
+        border.color: root.rebaScore > 0 ? root.riskColor : Style.Theme.border
+        border.width: root.rebaScore > 0 ? 2 : 1
+
+        // 左側色條
+        Rectangle {
+            width: 4
+            height: parent.height
+            color: root.rebaScore > 0 ? root.riskColor : "transparent"
+            anchors.left: parent.left
+            radius: 2
+        }
 
         Text {
             anchors.centerIn: parent
             text: root.riskLevelZh ? "風險等級: " + root.riskLevelZh : "風險等級: --"
             font.family: Style.Theme.fontFamily
             font.pixelSize: Style.Theme.riskLevelFontSize
-            color: Style.Theme.text
+            color: root.rebaScore > 0 ? root.riskColor : Style.Theme.textSecondary
         }
     }
 }

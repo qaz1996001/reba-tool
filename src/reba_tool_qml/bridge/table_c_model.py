@@ -120,6 +120,43 @@ class TableCModel(QAbstractTableModel):
         else:
             return "#ff0000"
 
+    # ========== QML 可呼叫的 Cell 資料 Slots ==========
+
+    @Slot(int, int, result=str)
+    def cellText(self, row, col):
+        """QML 用：取得 cell 顯示文字"""
+        idx = self.index(row, col)
+        v = self.data(idx, Qt.DisplayRole)
+        return v if v else ""
+
+    @Slot(int, int, result=str)
+    def cellBgColor(self, row, col):
+        """QML 用：取得 cell 背景色"""
+        idx = self.index(row, col)
+        v = self.data(idx, self.BackgroundColorRole)
+        return v if v else ""
+
+    @Slot(int, int, result=str)
+    def cellFgColor(self, row, col):
+        """QML 用：取得 cell 文字色"""
+        idx = self.index(row, col)
+        v = self.data(idx, self.ForegroundColorRole)
+        return v if v else ""
+
+    @Slot(int, int, result=bool)
+    def cellBold(self, row, col):
+        """QML 用：取得 cell 是否粗體"""
+        idx = self.index(row, col)
+        v = self.data(idx, self.FontBoldRole)
+        return bool(v) if v else False
+
+    @Slot(int, int, result=int)
+    def cellFontSize(self, row, col):
+        """QML 用：取得 cell 字號"""
+        idx = self.index(row, col)
+        v = self.data(idx, self.FontSizeRole)
+        return v if v else 10
+
     # ========== Score Properties ==========
 
     @Property(int, notify=scoreAChanged)

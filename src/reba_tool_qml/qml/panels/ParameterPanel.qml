@@ -45,6 +45,8 @@ GroupBox {
             font.family: Style.Theme.fontFamily
             font.pixelSize: Style.Theme.paramLabelFontSize
             color: Style.Theme.text
+            Layout.preferredWidth: 100
+            horizontalAlignment: Text.AlignRight
         }
         ComboBox {
             id: comboSide
@@ -61,6 +63,8 @@ GroupBox {
             font.family: Style.Theme.fontFamily
             font.pixelSize: Style.Theme.paramLabelFontSize
             color: Style.Theme.text
+            Layout.preferredWidth: 100
+            horizontalAlignment: Text.AlignRight
         }
         SpinBox {
             id: spinLoad
@@ -90,6 +94,8 @@ GroupBox {
             font.family: Style.Theme.fontFamily
             font.pixelSize: Style.Theme.paramLabelFontSize
             color: Style.Theme.text
+            Layout.preferredWidth: 100
+            horizontalAlignment: Text.AlignRight
         }
         ComboBox {
             id: comboCoupling

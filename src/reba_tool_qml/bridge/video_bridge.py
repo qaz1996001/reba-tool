@@ -286,6 +286,12 @@ class VideoBridge(QObject):
             self.isRecordingChanged.emit()
             self.recordingStopped.emit(path)
 
+        # 清理舊 Worker 的 EventBus 回調，避免多次選擇影片後
+        # handler 累積導致每幀觸發多次 _handle_frame → GUI 卡頓
+        if self._worker is not None:
+            self._worker.cleanup()
+            self._worker = None
+
         self._controller.on_processing_finished()
         self.isProcessingChanged.emit()
         self.isPausedChanged.emit()

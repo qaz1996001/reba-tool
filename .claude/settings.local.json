@@ -10,7 +10,10 @@
       "WebSearch",
       "Bash(findstr:*)",
       "Bash(git status:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(set:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }
