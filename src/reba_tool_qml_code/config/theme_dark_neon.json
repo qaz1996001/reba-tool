@@ -1,0 +1,46 @@
+{
+    "colors": {
+        "bgDeepNavy": "#0a0f1d",
+        "bgCharcoal": "#161c2d",
+        "cardBg": "#1e2539",
+        "accentNeonBlue": "#00f2ff",
+        "accentNeonGreen": "#39ff14",
+        "borderNavy": "#2d3748",
+        "textPrimary": "#f8fafc",
+        "textSecondary": "#94a3b8",
+        "textMuted": "#64748b",
+        "surface800": "#1e293b",
+        "surface900": "#0f172a",
+        "riskNegligible": "#10b981",
+        "riskLow": "#10b981",
+        "riskMedium": "#fbbf24",
+        "riskHigh": "#f43f5e",
+        "riskVeryHigh": "#dc2626",
+        "black": "#000000",
+        "transparent": "transparent"
+    },
+    "fonts": {
+        "family": "Segoe UI",
+        "familyCjk": "Microsoft YaHei",
+        "sizeXs": 9,
+        "sizeSm": 11,
+        "sizeMd": 13,
+        "sizeLg": 16,
+        "sizeXl": 20,
+        "sizeXxl": 28,
+        "sizeHuge": 42
+    },
+    "layout": {
+        "headerHeight": 48,
+        "footerHeight": 24,
+        "sidePanelWidth": 320,
+        "sidePanelMinWidth": 300,
+        "bottomHeight": 260,
+        "bottomLeftRatio": 0.25,
+        "bottomRightRatio": 0.35,
+        "spacing": 0,
+        "padding": 16,
+        "borderRadius": 8,
+        "borderWidth": 1
+    }
+}

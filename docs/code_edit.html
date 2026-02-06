@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html class="dark" lang="zh-TW">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Refined REBA Desktop Analysis Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=Noto+Sans+TC:wght@400;500;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <style type="text/tailwindcss">
+        :root {
+            --bg-deep-navy: #0a0f1d;
+            --bg-charcoal: #161c2d;
+            --card-bg: #1e2539;
+            --accent-neon-blue: #00f2ff;
+            --accent-neon-green: #39ff14;
+            --border-navy: #2d3748;
+            --risk-high: #f43f5e;
+            --risk-med: #fbbf24;
+            --risk-low: #10b981;
+        }
+        body { 
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-deep-navy);
+            color: #f8fafc;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .matrix-cell { 
+            aspect-ratio: 1/1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 16px; 
+            border: 1px solid rgba(255,255,255,0.03);
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="h-screen flex flex-col overflow-hidden">
+    <header
+        class="h-14 border-b border-[var(--border-navy)] bg-[var(--bg-charcoal)] px-6 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="w-8 h-8 bg-[var(--accent-neon-blue)] rounded flex items-center justify-center text-slate-900">
+                <span class="material-symbols-outlined font-bold text-xl">analytics</span>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-wider uppercase flex items-center gap-2">
+                    REBA <span class="text-[var(--accent-neon-blue)]">Unified Dashboard</span>
+                    <span class="bg-slate-800 px-2 py-0.5 rounded text-slate-400 font-normal">V2.5.0</span>
+                </h1>
+            </div>
+        </div>
+        <div class="flex items-center gap-6">
+            <div class="flex gap-4 font-mono border-r border-slate-700 pr-6">
+                <div class="flex flex-col"><span class="text-slate-500 uppercase">fps</span><span
+                        class="text-[var(--accent-neon-green)]">30.2</span></div>
+                <div class="flex flex-col"><span class="text-slate-500 uppercase">latency</span><span
+                        class="text-[var(--accent-neon-blue)]">12ms</span></div>
+            </div>
+            <button
+                class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-800 transition-colors text-slate-400">
+                <span class="material-symbols-outlined">settings</span>
+            </button>
+        </div>
+    </header>
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <div class="flex-1 flex overflow-hidden min-h-0 border-b border-[var(--border-navy)]">
+            <section class="flex-1 p-4 flex flex-col gap-4 relative">
+                <div
+                    class="flex-1 bg-black rounded-lg border border-[var(--border-navy)] relative overflow-hidden group">
+                    <div class="absolute top-4 right-4 z-20">
+                        <div
+                            class="bg-black/60 backdrop-blur-md border border-[var(--accent-neon-blue)]/50 rounded-xl p-3 flex flex-col items-center min-w-[80px]">
+                            <span class="text-slate-400 font-bold uppercase tracking-widest">REBA</span>
+                            <span class="text-4xl font-black text-[var(--accent-neon-blue)]">07</span>
+                            <span
+                                class="text-[9px] px-2 py-0.5 mt-1 rounded bg-[var(--risk-med)]/20 text-[var(--risk-med)] font-bold">中度風險</span>
+                        </div>
+                    </div>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-700">
+                        <span class="material-symbols-outlined text-7xl mb-2">videocam</span>
+                        <p class="text-xs uppercase tracking-widest text-slate-500">Awaiting Video Input...</p>
+                    </div>
+                    <div
+                        class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="flex items-center gap-4">
+                            <button class="material-symbols-outlined text-white">play_arrow</button>
+                            <div class="flex-1 h-1 bg-slate-800 rounded-full relative">
+                                <div
+                                    class="absolute left-0 top-0 bottom-0 w-1/3 bg-[var(--accent-neon-blue)] rounded-full">
+                                </div>
+                            </div>
+                            <span class="font-mono text-slate-300">00:45 / 02:30</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <aside
+                class="w-80 bg-[var(--bg-charcoal)] border-l border-[var(--border-navy)] flex flex-col overflow-hidden">
+                <div class="p-4 border-b border-slate-800">
+                    <h3 class="font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg">tune</span> 評估參數設定
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="space-y-1">
+                                <label class="text-slate-500 block">分析側邊</label>
+                                <select
+                                    class="w-full h-8 bg-slate-900 border-slate-700 rounded text-xs text-slate-300 px-2">
+                                    <option>右側 (Right)</option>
+                                    <option>左側 (Left)</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-slate-500 block">握持品質</label>
+                                <select
+                                    class="w-full h-8 bg-slate-900 border-slate-700 rounded text-xs text-slate-300 px-2">
+                                    <option>優良 (Good)</option>
+                                    <option>普通 (Fair)</option>
+                                    <option>不良 (Poor)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-slate-500 block">負荷重量 (kg)</label>
+                            <input class="w-full h-8 bg-slate-900 border-slate-700 rounded text-xs text-slate-300 px-3"
+                                type="number" value="5.0" />
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1 p-4 flex flex-col overflow-hidden">
+                    <h3 class="font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg">show_chart</span> 即時評分趨勢
+                    </h3>
+                    <div class="flex-1 bg-slate-900/50 rounded border border-slate-800 relative overflow-hidden">
+                        <svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+                            <path
+                                d="M0 80 Q 20 70, 40 75 T 80 60 T 120 85 T 160 50 T 200 65 T 240 40 T 280 55 V 100 H 0 Z"
+                                fill="url(#grad)" fill-opacity="0.2"></path>
+                            <path d="M0 80 Q 20 70, 40 75 T 80 60 T 120 85 T 160 50 T 200 65 T 240 40 T 280 55"
+                                fill="none" stroke="var(--accent-neon-blue)" stroke-width="2"></path>
+                            <defs>
+                                <linearGradient id="grad" x1="0%" x2="0%" y1="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:var(--accent-neon-blue);stop-opacity:1"></stop>
+                                    <stop offset="100%" style="stop-color:var(--bg-deep-navy);stop-opacity:0"></stop>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div
+                            class="absolute bottom-1 right-1 text-[8px] font-mono text-slate-600 uppercase tracking-tighter">
+                            time (sec)</div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 gap-2">
+                        <button
+                            class="h-9 bg-[var(--accent-neon-blue)]/10 text-[var(--accent-neon-blue)] border border-[var(--accent-neon-blue)]/30 rounded font-bold uppercase hover:bg-[var(--accent-neon-blue)]/20 transition-colors">匯出
+                            CSV</button>
+                        <button
+                            class="h-9 bg-slate-800 text-slate-400 rounded font-bold uppercase hover:bg-slate-700 transition-colors">重設分析</button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+        <div class="h-72 bg-[var(--bg-charcoal)] flex overflow-hidden shrink-0">
+            <div class="w-[20%] border-r border-slate-800 p-4 flex flex-col overflow-hidden">
+                <h3 class="font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2 shrink-0">
+                    <span class="material-symbols-outlined text-lg">accessibility_new</span> 關節角度與評分
+                </h3>
+                <div class="flex-1 overflow-auto custom-scrollbar rounded border border-slate-800">
+                    <table class="w-full text-left text-xs">
+                        <thead class="sticky top-0 bg-slate-800 text-slate-500 z-10">
+                            <tr>
+                                <th class="p-1.5 font-medium">部位</th>
+                                <th class="p-1.5 font-medium text-center">角度</th>
+                                <th class="p-1.5 font-medium text-center">評分</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/50">
+                            <tr>
+                                <td class="p-1.5 text-slate-300">頸部</td>
+                                <td class="p-1.5 text-center text-[var(--accent-neon-blue)] font-mono">15°</td>
+                                <td class="p-1.5 text-center font-bold">1</td>
+                            </tr>
+                            <tr>
+                                <td class="p-1.5 text-slate-300">軀幹</td>
+                                <td class="p-1.5 text-center text-[var(--accent-neon-blue)] font-mono">22°</td>
+                                <td class="p-1.5 text-center font-bold">2</td>
+                            </tr>
+                            <tr>
+                                <td class="p-1.5 text-slate-300">腿部</td>
+                                <td class="p-1.5 text-center text-[var(--accent-neon-blue)] font-mono">-</td>
+                                <td class="p-1.5 text-center font-bold">1</td>
+                            </tr>
+                            <tr>
+                                <td class="p-1.5 text-slate-300">上臂</td>
+                                <td class="p-1.5 text-center text-[var(--accent-neon-blue)] font-mono">45°</td>
+                                <td class="p-1.5 text-center font-bold text-rose-500">3</td>
+                            </tr>
+                            <tr>
+                                <td class="p-1.5 text-slate-300">前臂</td>
+                                <td class="p-1.5 text-center text-[var(--accent-neon-blue)] font-mono">85°</td>
+                                <td class="p-1.5 text-center font-bold">1</td>
+                            </tr>
+                            <tr>
+                                <td class="p-1.5 text-slate-300">手腕</td>
+                                <td class="p-1.5 text-center text-[var(--accent-neon-blue)] font-mono">12°</td>
+                                <td class="p-1.5 text-center font-bold">2</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="w-[35%] border-r border-slate-800 p-4 flex flex-col overflow-hidden">
+                <h3 class="font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-xl">account_tree</span> 群組評分分解
+                </h3>
+                <div class="flex-1 grid grid-cols-2 gap-3 h-full">
+                    <div class="flex flex-col gap-3">
+                        <div class="flex-1 bg-slate-900/50 p-3 rounded border border-slate-800 flex ">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-slate-500 block uppercase font-bold tracking-tighter">Group
+                                        A Score</span>
+                                    <span class=" text-slate-600 block leading-tight">軀幹+頸部+腿部+荷重</span>
+                                    <span class=" text-slate-600 block leading-tight">軀幹+頸部+腿部+荷重</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-center px-3">
+                                <span class=" text-3xl font-black text-[var(--accent-neon-green)] text-right">4</span>
+                            </div>
+                        </div>
+                        <div class="flex-1 bg-slate-900/50 p-3 rounded border border-slate-800 flex ">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-slate-500 block uppercase font-bold tracking-tighter">Group
+                                        B Score</span>
+                                    <span class=" text-slate-600 block leading-tight">上臂+前臂+手腕+耦合</span>
+                                    <span class=" text-slate-600 block leading-tight">上臂+前臂+手腕+耦合</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-center px-3">
+                                <span class=" text-3xl font-black text-[var(--accent-neon-green)] text-right">4</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-gradient-to-br from-[var(--accent-neon-blue)]/5 to-slate-900/40 rounded-xl border border-[var(--accent-neon-blue)]/20 flex flex-col items-center justify-center relative overflow-hidden">
+                        <div class="absolute inset-0 flex items-center justify-center opacity-5">
+                            <span class="material-symbols-outlined text-9xl">calculate</span>
+                        </div>
+                        <div class="text-center z-10">
+                            <span class="text-slate-500 block uppercase font-bold tracking-[0.2em] mb-1">Score
+                                C</span>
+                            <div
+                                class="text-5xl font-black text-[var(--accent-neon-blue)] drop-shadow-[0_0_10px_rgba(0,242,255,0.3)]">
+                                6</div>
+                            <div
+                                class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-slate-800/80 rounded-full border border-slate-700">
+                                <span class="text-[9px] text-slate-400 font-medium">Activity +1</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="w-[35%] p-4 flex flex-1 flex-col overflow-hidden">
+                <h3 class="font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2 shrink-0">
+                    <span class="material-symbols-outlined text-lg">grid_view</span> Table C 矩陣
+                </h3>
+                <div class="flex-1 flex flex-col overflow-hidden">
+                    <div
+                        class="flex-1 grid grid-cols-12 grid-rows-12 gap-[1px] p-[1px] bg-slate-800/50 rounded-sm border border-slate-700/50 overflow-hidden">
+                        <div class="matrix-cell bg-slate-900/80">1</div>
+                        <div class="matrix-cell bg-slate-900/80">1</div>
+                        <div class="matrix-cell bg-slate-900/80">1</div>
+                        <div class="matrix-cell bg-slate-900/80">2</div>
+                        <div class="matrix-cell bg-slate-900/80">3</div>
+                        <div class="matrix-cell bg-slate-900/80">3</div>
+                        <div class="matrix-cell bg-slate-900/80">4</div>
+                        <div class="matrix-cell bg-slate-900/80">5</div>
+                        <div class="matrix-cell bg-slate-900/80">6</div>
+                        <div class="matrix-cell bg-slate-900/80">7</div>
+                        <div class="matrix-cell bg-slate-900/80">7</div>
+                        <div class="matrix-cell bg-slate-900/80">7</div>
+                        <div class="matrix-cell bg-slate-900/80">1</div>
+                        <div class="matrix-cell bg-slate-900/80">2</div>
+                        <div class="matrix-cell bg-slate-900/80">2</div>
+                        <div class="matrix-cell bg-slate-900/80">3</div>
+                        <div class="matrix-cell bg-slate-900/80">4</div>
+                        <div class="matrix-cell bg-slate-900/80">4</div>
+                        <div class="matrix-cell bg-slate-900/80">5</div>
+                        <div class="matrix-cell bg-slate-900/80">6</div>
+                        <div class="matrix-cell bg-slate-900/80">6</div>
+                        <div class="matrix-cell bg-slate-900/80">7</div>
+                        <div class="matrix-cell bg-slate-900/80">7</div>
+                        <div class="matrix-cell bg-slate-900/80">8</div>
+                        <div class="matrix-cell bg-slate-900/80">2</div>
+                        <div class="matrix-cell bg-slate-900/80">3</div>
+                        <div class="matrix-cell bg-slate-900/80">3</div>
+                        <div class="matrix-cell bg-slate-900/80">3</div>
+                        <div class="matrix-cell bg-slate-900/80">4</div>
+                        <div class="matrix-cell bg-slate-900/80">5</div>
+                        <div class="matrix-cell bg-slate-900/80">6</div>
+                        <div class="matrix-cell bg-slate-900/80">7</div>
+                        <div class="matrix-cell bg-slate-900/80">7</div>
+                        <div class="matrix-cell bg-slate-900/80">8</div>
+                        <div class="matrix-cell bg-slate-900/80">8</div>
+                        <div class="matrix-cell bg-slate-900/80">8</div>
+                        <div class="matrix-cell bg-slate-900/80">3</div>
+                        <div class="matrix-cell bg-slate-900/80">4</div>
+                        <div class="matrix-cell bg-slate-900/80">4</div>
+                        <div class="matrix-cell bg-slate-900/80">4</div>
+                        <div class="matrix-cell bg-slate-900/80">5</div>
+                        <div class="matrix-cell bg-slate-900/80">6</div>
+                        <div
+                            class="matrix-cell bg-[var(--accent-neon-blue)] text-slate-900 font-black shadow-[0_0_8px_var(--accent-neon-blue)] z-10">
+                            6</div>
+                        <div class="matrix-cell bg-slate-900/80">7</div>
+                        <div class="matrix-cell bg-slate-900/80">8</div>
+                        <div class="matrix-cell bg-slate-900/80">8</div>
+                        <div class="matrix-cell bg-slate-900/80">9</div>
+                        <div class="matrix-cell bg-slate-900/80">9</div>
+                        <div class="matrix-cell bg-slate-900/80">4</div>
+                        <div class="matrix-cell bg-slate-900/80">4</div>
+                        <div class="matrix-cell bg-slate-900/80">4</div>
+                        <div class="matrix-cell bg-slate-900/80">5</div>
+                        <div class="matrix-cell bg-slate-900/80">6</div>
+                        <div class="matrix-cell bg-slate-900/80">7</div>
+                        <div class="matrix-cell bg-slate-900/80">8</div>
+                        <div class="matrix-cell bg-slate-900/80">8</div>
+                        <div class="matrix-cell bg-slate-900/80">9</div>
+                        <div class="matrix-cell bg-slate-900/80">9</div>
+                        <div class="matrix-cell bg-slate-900/80">10</div>
+                        <div class="matrix-cell bg-slate-900/80">10</div>
+                        <div class="matrix-cell bg-slate-900/80">5</div>
+                        <div class="matrix-cell bg-slate-900/80">5</div>
+                        <div class="matrix-cell bg-slate-900/80">6</div>
+                        <div class="matrix-cell bg-slate-900/80">7</div>
+                        <div class="matrix-cell bg-slate-900/80">8</div>
+                        <div class="matrix-cell bg-slate-900/80">8</div>
+                        <div class="matrix-cell bg-slate-900/80">9</div>
+                        <div class="matrix-cell bg-slate-900/80">9</div>
+                        <div class="matrix-cell bg-slate-900/80">10</div>
+                        <div class="matrix-cell bg-slate-900/80">10</div>
+                        <div class="matrix-cell bg-slate-900/80">11</div>
+                        <div class="matrix-cell bg-slate-900/80">11</div>
+                        <div class="matrix-cell bg-slate-900/80">6</div>
+                        <div class="matrix-cell bg-slate-900/80">6</div>
+                        <div class="matrix-cell bg-slate-900/80">7</div>
+                        <div class="matrix-cell bg-slate-900/80">8</div>
+                        <div class="matrix-cell bg-slate-900/80">8</div>
+                        <div class="matrix-cell bg-slate-900/80">9</div>
+                        <div class="matrix-cell bg-slate-900/80">9</div>
+                        <div class="matrix-cell bg-slate-900/80">10</div>
+                        <div class="matrix-cell bg-slate-900/80">10</div>
+                        <div class="matrix-cell bg-slate-900/80">11</div>
+                        <div class="matrix-cell bg-slate-900/80">11</div>
+                        <div class="matrix-cell bg-slate-900/80">12</div>
+                        <div class="matrix-cell bg-slate-900/80">7</div>
+                        <div class="matrix-cell bg-slate-900/80">7</div>
+                        <div class="matrix-cell bg-slate-900/80">8</div>
+                        <div class="matrix-cell bg-slate-900/80">9</div>
+                        <div class="matrix-cell bg-slate-900/80">9</div>
+                        <div class="matrix-cell bg-slate-900/80">10</div>
+                        <div class="matrix-cell bg-slate-900/80">10</div>
+                        <div class="matrix-cell bg-slate-900/80">11</div>
+                        <div class="matrix-cell bg-slate-900/80">11</div>
+                        <div class="matrix-cell bg-slate-900/80">12</div>
+                        <div class="matrix-cell bg-slate-900/80">12</div>
+                        <div class="matrix-cell bg-slate-900/80">12</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                        <div class="matrix-cell bg-slate-900/80 opacity-40">...</div>
+                    </div>
+                    <div class="mt-2 flex justify-between items-center shrink-0">
+                        <span class="text-[9px] text-slate-500 font-mono tracking-tight">Row: A (4) | Col: B (5)</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[9px] text-slate-500 uppercase font-bold">Final:</span>
+                            <span class="text-lg font-black text-[var(--accent-neon-blue)]">07</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer
+        class="h-6 bg-[var(--bg-deep-navy)] px-4 flex items-center justify-between border-t border-slate-800 shrink-0">
+        <div class="flex items-center gap-4 text-[9px] text-slate-600">
+            <span>DEVICE: GPU ACCELERATED</span>
+            <span>STORAGE: 1.2GB AVAILABLE</span>
+        </div>
+        <div class="flex items-center gap-2 text-[9px] text-slate-600">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></span>
+            SYSTEM READY
+        </div>
+    </footer>
+
+</body>
+
+</html>
