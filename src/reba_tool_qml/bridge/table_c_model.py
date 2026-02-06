@@ -8,8 +8,6 @@ QAbstractTableModel 讓 QML TableView 直接使用。
 from PySide6.QtCore import QAbstractTableModel, Qt, QModelIndex, Property, Signal, Slot
 from PySide6.QtGui import QColor
 
-from reba_scorer import REBAScorer
-
 
 class TableCModel(QAbstractTableModel):
     """12x12 REBA Table C 查詢表"""
@@ -22,8 +20,18 @@ class TableCModel(QAbstractTableModel):
     scoreAChanged = Signal()
     scoreBChanged = Signal()
 
-    # 直接使用 REBAScorer 的 TABLE_C
-    TABLE_C_DATA = REBAScorer.TABLE_C
+    TABLE_C_DATA = [[1,  1,  1,  2,  3,  3,  4,  5,  6,  7,  7,  7],
+                    [1,  2,  2,  3,  4,  4,  5,  6,  6,  7,  7,  8],
+                    [2,  3,  3,  3,  4,  5,  6,  7,  7,  8,  8,  8],
+                    [3,  4,  4,  4,  5,  6,  7,  8,  8,  9,  9,  9],
+                    [4,  4,  4,  5,  6,  7,  8,  8,  9,  9,  9,  9],
+                    [6,  6,  6,  7,  8,  8,  9,  9,  10, 10, 10, 10],
+                    [7,  7,  7,  8,  9,  9,  9,  10, 10, 11, 11, 11],
+                    [8,  8,  8,  9,  10, 10, 10, 10, 10, 11, 11, 11],
+                    [9,  9,  9,  10, 10, 10, 11, 11, 11, 12, 12, 12],
+                    [10, 10, 10, 11, 11, 11, 11, 12, 12, 12, 12, 12],
+                    [11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12],
+                    [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]]
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -54,8 +62,10 @@ class TableCModel(QAbstractTableModel):
 
         is_header_row = (row == 0)
         is_header_col = (col == 0)
-        is_highlighted_row = (self._score_a is not None and row == self._score_a)
-        is_highlighted_col = (self._score_b is not None and col == self._score_b)
+        is_highlighted_row = (
+            self._score_a is not None and row == self._score_a)
+        is_highlighted_col = (
+            self._score_b is not None and col == self._score_b)
         is_intersection = is_highlighted_row and is_highlighted_col
 
         # === Display ===
