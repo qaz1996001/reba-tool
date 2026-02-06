@@ -36,11 +36,11 @@ Rectangle {
             spacing: 8
             Text {
                 text: "\uD83C\uDF33"  // 🌳
-                font.pixelSize: Style.Theme.fontSm
+                font.pixelSize: Style.Theme.fontXl
             }
             Text {
                 text: "群組評分分解"
-                font.pixelSize: Style.Theme.fontSm
+                font.pixelSize: Style.Theme.fontXl
                 font.bold: true
                 font.letterSpacing: 3
                 font.capitalization: Font.AllUppercase
@@ -76,7 +76,7 @@ Rectangle {
                         spacing: 2
                         Text {
                             text: "GROUP A SCORE"
-                            font.pixelSize: Style.Theme.fontXs
+                            font.pixelSize: Style.Theme.fontLg
                             font.bold: true
                             font.letterSpacing: 1
                             font.capitalization: Font.AllUppercase
@@ -84,7 +84,7 @@ Rectangle {
                         }
                         Text {
                             text: "軀幹+頸部+腿部+荷重"
-                            font.pixelSize: Style.Theme.fontXs
+                            font.pixelSize: Style.Theme.fontLg
                             color: Style.Theme.textMuted
                             opacity: 0.6
                         }
@@ -140,7 +140,7 @@ Rectangle {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "SCORE C"
-                        font.pixelSize: Style.Theme.fontXs
+                        font.pixelSize: Style.Theme.fontLg
                         font.bold: true
                         font.letterSpacing: 3
                         font.capitalization: Font.AllUppercase
@@ -167,7 +167,7 @@ Rectangle {
                             id: activityLabel
                             anchors.centerIn: parent
                             text: "Activity +" + root.activityScore
-                            font.pixelSize: Style.Theme.fontXs
+                            font.pixelSize: Style.Theme.fontLg
                             color: Style.Theme.textMuted
                         }
                     }
@@ -193,7 +193,7 @@ Rectangle {
                         spacing: 2
                         Text {
                             text: "GROUP B SCORE"
-                            font.pixelSize: Style.Theme.fontXs
+                            font.pixelSize: Style.Theme.fontLg
                             font.bold: true
                             font.letterSpacing: 1
                             font.capitalization: Font.AllUppercase
@@ -201,13 +201,14 @@ Rectangle {
                         }
                         Text {
                             text: "上臂+前臂+手腕+耦合"
-                            font.pixelSize: Style.Theme.fontXs
+                            font.pixelSize: Style.Theme.fontLg
                             color: Style.Theme.textMuted
                             opacity: 0.6
                         }
                     }
                     Text {
-                        text: root.groupBScore.toString()
+                        text: root.groupBScore.toStr
+                        ing()
                         font.pixelSize: Style.Theme.fontXxl
                         font.weight: Font.Black
                         color: Style.Theme.accentNeonBlue

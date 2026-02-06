@@ -13,6 +13,10 @@ Rectangle {
     id: root
     color: Style.Theme.bgCharcoal
 
+    // ── 信號（向上傳遞操作）──
+    signal exportCsvClicked()
+    signal resetClicked()
+
     // ── 左側邊線 ──
     Rectangle {
         anchors.left: parent.left
@@ -80,9 +84,19 @@ Rectangle {
                             color: Style.Theme.textMuted
                         }
                         ComboBox {
+                            id: sideCombo
                             Layout.fillWidth: true
                             model: ["右側 (Right)", "左側 (Left)"]
                             font.pixelSize: Style.Theme.fontXs
+                            currentIndex: settingsBridge.side === "left" ? 1 : 0
+                            onActivated: {
+                                var val = currentIndex === 1 ? "left" : "right";
+                                settingsBridge.setSide(val);
+                                videoBridge.setParameters(
+                                    settingsBridge.side,
+                                    settingsBridge.loadWeight,
+                                    settingsBridge.coupling);
+                            }
                         }
                     }
                     ColumnLayout {
@@ -94,9 +108,23 @@ Rectangle {
                             color: Style.Theme.textMuted
                         }
                         ComboBox {
+                            id: couplingCombo
                             Layout.fillWidth: true
                             model: ["優良 (Good)", "普通 (Fair)", "不良 (Poor)"]
                             font.pixelSize: Style.Theme.fontXs
+                            currentIndex: {
+                                if (settingsBridge.coupling === "fair") return 1;
+                                if (settingsBridge.coupling === "poor") return 2;
+                                return 0;
+                            }
+                            onActivated: {
+                                var vals = ["good", "fair", "poor"];
+                                settingsBridge.setCoupling(vals[currentIndex]);
+                                videoBridge.setParameters(
+                                    settingsBridge.side,
+                                    settingsBridge.loadWeight,
+                                    settingsBridge.coupling);
+                            }
                         }
                     }
                 }
@@ -111,14 +139,23 @@ Rectangle {
                         color: Style.Theme.textMuted
                     }
                     SpinBox {
+                        id: loadSpinBox
                         Layout.fillWidth: true
-                        from: 0; to: 10000; value: 500; stepSize: 100
+                        from: 0; to: 10000; stepSize: 100
+                        value: Math.round(settingsBridge.loadWeight * 100)
                         property int decimals: 1
                         textFromValue: function(value, locale) {
                             return (value / 100).toFixed(1)
                         }
                         valueFromText: function(text, locale) {
                             return Math.round(parseFloat(text) * 100)
+                        }
+                        onValueModified: {
+                            settingsBridge.setLoadWeight(value / 100.0);
+                            videoBridge.setParameters(
+                                settingsBridge.side,
+                                settingsBridge.loadWeight,
+                                settingsBridge.coupling);
                         }
                     }
                 }
@@ -163,23 +200,38 @@ Rectangle {
                 border.color: Style.Theme.surface800
                 border.width: 1
 
-                // Canvas 趨勢圖（靜態佔位）
+                // 趨勢圖 Canvas（使用 rebaBridge 歷史資料）
                 Canvas {
                     id: trendCanvas
                     anchors.fill: parent
                     anchors.margins: 4
+
+                    // 追蹤分數歷史
+                    property var scoreHistory: []
+                    property int maxPoints: 60
+
+                    Connections {
+                        target: rebaBridge
+                        function onScoreChanged() {
+                            var arr = trendCanvas.scoreHistory.slice();
+                            arr.push(rebaBridge.rebaScore);
+                            if (arr.length > trendCanvas.maxPoints) {
+                                arr = arr.slice(arr.length - trendCanvas.maxPoints);
+                            }
+                            trendCanvas.scoreHistory = arr;
+                            trendCanvas.requestPaint();
+                        }
+                    }
+
                     onPaint: {
                         var ctx = getContext("2d")
                         var w = width, h = height
                         ctx.clearRect(0, 0, w, h)
 
-                        // 模擬趨勢線
-                        var points = [
-                            {x: 0, y: 0.7}, {x: 0.14, y: 0.6},
-                            {x: 0.28, y: 0.65}, {x: 0.42, y: 0.45},
-                            {x: 0.56, y: 0.75}, {x: 0.7, y: 0.35},
-                            {x: 0.85, y: 0.5}, {x: 1.0, y: 0.3}
-                        ]
+                        var pts = scoreHistory;
+                        if (pts.length < 2) return;
+
+                        var maxScore = 15;
 
                         // 填充漸層
                         var grad = ctx.createLinearGradient(0, 0, 0, h)
@@ -187,9 +239,10 @@ Rectangle {
                         grad.addColorStop(1, "rgba(10, 15, 29, 0)")
                         ctx.fillStyle = grad
                         ctx.beginPath()
-                        ctx.moveTo(points[0].x * w, points[0].y * h)
-                        for (var i = 1; i < points.length; i++)
-                            ctx.lineTo(points[i].x * w, points[i].y * h)
+                        var stepX = w / (pts.length - 1);
+                        ctx.moveTo(0, h - (pts[0] / maxScore) * h)
+                        for (var i = 1; i < pts.length; i++)
+                            ctx.lineTo(i * stepX, h - (pts[i] / maxScore) * h)
                         ctx.lineTo(w, h)
                         ctx.lineTo(0, h)
                         ctx.closePath()
@@ -199,9 +252,9 @@ Rectangle {
                         ctx.strokeStyle = "#00f2ff"
                         ctx.lineWidth = 2
                         ctx.beginPath()
-                        ctx.moveTo(points[0].x * w, points[0].y * h)
-                        for (var j = 1; j < points.length; j++)
-                            ctx.lineTo(points[j].x * w, points[j].y * h)
+                        ctx.moveTo(0, h - (pts[0] / maxScore) * h)
+                        for (var j = 1; j < pts.length; j++)
+                            ctx.lineTo(j * stepX, h - (pts[j] / maxScore) * h)
                         ctx.stroke()
                     }
                 }
@@ -249,6 +302,7 @@ Rectangle {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
+                    onClicked: root.exportCsvClicked()
                 }
                 Button {
                     Layout.fillWidth: true
@@ -268,6 +322,7 @@ Rectangle {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
+                    onClicked: root.resetClicked()
                 }
             }
         }

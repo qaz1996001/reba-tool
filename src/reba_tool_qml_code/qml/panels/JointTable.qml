@@ -6,6 +6,7 @@ import "../style" as Style
 /**
  * 底部左側：關節角度與評分表
  * 6 列資料：頸部、軀幹、腿部、上臂、前臂、手腕
+ * 即時從 rebaBridge 讀取角度與分數
  */
 Rectangle {
     id: root
@@ -29,11 +30,11 @@ Rectangle {
             spacing: 8
             Text {
                 text: "\uD83E\uDDD1\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1"  // 👥
-                font.pixelSize: Style.Theme.fontLg
+                font.pixelSize: Style.Theme.fontXl
             }
             Text {
                 text: "關節角度與評分"
-                font.pixelSize: Style.Theme.fontSm
+                font.pixelSize: Style.Theme.fontXl
                 font.bold: true
                 font.letterSpacing: 3
                 font.capitalization: Font.AllUppercase
@@ -52,28 +53,15 @@ Rectangle {
             border.width: 1
             clip: true
 
-            ListView {
-                id: jointListView
+            ColumnLayout {
                 anchors.fill: parent
-                interactive: true
-                clip: true
+                spacing: 0
 
-                // 靜態模型（Phase 2 替換為 bridge 資料）
-                model: ListModel {
-                    ListElement { part: "頸部"; angle: "15°"; score: 1; isHigh: false }
-                    ListElement { part: "軀幹"; angle: "22°"; score: 2; isHigh: false }
-                    ListElement { part: "腿部"; angle: "-";   score: 1; isHigh: false }
-                    ListElement { part: "上臂"; angle: "45°"; score: 3; isHigh: true  }
-                    ListElement { part: "前臂"; angle: "85°"; score: 1; isHigh: false }
-                    ListElement { part: "手腕"; angle: "12°"; score: 2; isHigh: false }
-                }
-
-                headerPositioning: ListView.OverlayHeader
-                header: Rectangle {
-                    width: jointListView.width
-                    height: 30
+                // ── 表頭 ──
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 30
                     color: Style.Theme.surface800
-                    z: 10
 
                     Row {
                         anchors.fill: parent
@@ -84,7 +72,7 @@ Rectangle {
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "部位"
-                                font.pixelSize: Style.Theme.fontXs
+                                font.pixelSize: Style.Theme.fontXl
                                 color: Style.Theme.textMuted
                             }
                         }
@@ -93,7 +81,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 text: "角度"
-                                font.pixelSize: Style.Theme.fontXs
+                                font.pixelSize: Style.Theme.fontXl
                                 color: Style.Theme.textMuted
                             }
                         }
@@ -102,65 +90,104 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 text: "評分"
-                                font.pixelSize: Style.Theme.fontXs
+                                font.pixelSize: Style.Theme.fontXl
                                 color: Style.Theme.textMuted
                             }
                         }
                     }
                 }
 
-                delegate: Rectangle {
-                    id: rowDelegate
-                    property int rowIndex: index
-                    width: jointListView.width
-                    height: 32
-                    color: rowIndex % 2 === 0 ? "transparent"
-                                              : Qt.rgba(Style.Theme.surface800.r,
-                                                        Style.Theme.surface800.g,
-                                                        Style.Theme.surface800.b, 0.3)
+                // ── 6 行關節資料 ──
+                Repeater {
+                    id: jointRepeater
+                    model: 6
 
-                    // 底部分隔線
+                    // 關節定義
+                    property var jointNames: ["頸部", "軀幹", "腿部", "上臂", "前臂", "手腕"]
+
                     Rectangle {
-                        anchors.left: parent.left; anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        height: 1
-                        color: Qt.rgba(Style.Theme.surface800.r,
-                                       Style.Theme.surface800.g,
-                                       Style.Theme.surface800.b, 0.5)
-                    }
+                        id: rowDelegate
+                        property int rowIndex: index
 
-                    Row {
-                        anchors.fill: parent
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 8
-                        Item {
-                            width: parent.width * 0.4; height: parent.height
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: model.part
-                                font.pixelSize: Style.Theme.fontXs
-                                color: Style.Theme.textSecondary
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        color: rowIndex % 2 === 0 ? "transparent"
+                                                  : Qt.rgba(Style.Theme.surface800.r,
+                                                            Style.Theme.surface800.g,
+                                                            Style.Theme.surface800.b, 0.3)
+
+                        // 取得角度值
+                        property string angleValue: {
+                            switch (rowIndex) {
+                                case 0: return rebaBridge.neckAngle;
+                                case 1: return rebaBridge.trunkAngle;
+                                case 2: return rebaBridge.legAngle;
+                                case 3: return rebaBridge.upperArmAngle;
+                                case 4: return rebaBridge.forearmAngle;
+                                case 5: return rebaBridge.wristAngle;
+                                default: return "--";
                             }
                         }
-                        Item {
-                            width: parent.width * 0.3; height: parent.height
-                            Text {
-                                anchors.centerIn: parent
-                                text: model.angle
-                                font.pixelSize: Style.Theme.fontXs
-                                font.family: "Consolas"
-                                color: Style.Theme.accentNeonBlue
+
+                        // 取得分數值
+                        property int scoreValue: {
+                            switch (rowIndex) {
+                                case 0: return rebaBridge.neckScore;
+                                case 1: return rebaBridge.trunkScore;
+                                case 2: return rebaBridge.legScore;
+                                case 3: return rebaBridge.upperArmScore;
+                                case 4: return rebaBridge.forearmScore;
+                                case 5: return rebaBridge.wristScore;
+                                default: return 0;
                             }
                         }
-                        Item {
-                            width: parent.width * 0.3; height: parent.height
-                            Text {
-                                anchors.centerIn: parent
-                                text: model.score
-                                font.pixelSize: Style.Theme.fontXs
-                                font.bold: true
-                                color: model.isHigh ? Style.Theme.riskHigh
-                                                    : Style.Theme.textPrimary
+
+                        property bool isHigh: scoreValue >= 3
+
+                        // 底部分隔線
+                        Rectangle {
+                            anchors.left: parent.left; anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            height: 1
+                            color: Qt.rgba(Style.Theme.surface800.r,
+                                           Style.Theme.surface800.g,
+                                           Style.Theme.surface800.b, 0.5)
+                        }
+
+                        Row {
+                            anchors.fill: parent
+                            anchors.leftMargin: 8
+                            anchors.rightMargin: 8
+                            Item {
+                                width: parent.width * 0.4; height: parent.height
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: jointRepeater.jointNames[rowDelegate.rowIndex]
+                                    font.pixelSize: Style.Theme.fontMd
+                                    color: Style.Theme.textSecondary
+                                }
+                            }
+                            Item {
+                                width: parent.width * 0.3; height: parent.height
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: rowDelegate.angleValue
+                                    font.pixelSize: Style.Theme.fontXl
+                                    font.family: "Consolas"
+                                    color: Style.Theme.accentNeonBlue
+                                }
+                            }
+                            Item {
+                                width: parent.width * 0.3; height: parent.height
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: rowDelegate.scoreValue > 0
+                                          ? rowDelegate.scoreValue.toString() : "--"
+                                    font.pixelSize: Style.Theme.fontXl
+                                    font.bold: true
+                                    color: rowDelegate.isHigh ? Style.Theme.riskHigh
+                                                              : Style.Theme.textPrimary
+                                }
                             }
                         }
                     }
