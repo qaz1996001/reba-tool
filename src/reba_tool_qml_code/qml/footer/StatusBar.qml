@@ -5,7 +5,7 @@ import "../style" as Style
 /**
  * 底部狀態列
  * 左側：裝置 / 儲存空間
- * 右側：綠色圓點 + SYSTEM READY
+ * 右側：綠色圓點 + 狀態文字
  */
 Rectangle {
     id: root
@@ -13,6 +13,7 @@ Rectangle {
     color: Style.Theme.bgDeepNavy
 
     property bool systemReady: true
+    property string statusText: "SYSTEM READY"
 
     // ── 頂部邊線 ──
     Rectangle {
@@ -37,7 +38,7 @@ Rectangle {
                 color: Style.Theme.textMuted
             }
             Text {
-                text: "STORAGE: 1.2GB AVAILABLE"
+                text: "RECORDS: " + dataBridge.recordCount
                 font.pixelSize: Style.Theme.fontXs
                 color: Style.Theme.textMuted
             }
@@ -55,7 +56,7 @@ Rectangle {
                 color: root.systemReady ? "#10b981" : "#ef4444"
             }
             Text {
-                text: root.systemReady ? "SYSTEM READY" : "SYSTEM ERROR"
+                text: root.statusText
                 font.pixelSize: Style.Theme.fontXs
                 color: Style.Theme.textMuted
             }

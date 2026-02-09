@@ -96,7 +96,7 @@ Rectangle {
                     Text {
                         anchors.centerIn: parent
                         text: cell.cellValue
-                        font.pixelSize: Math.max(8, Math.min(11, cell.width * 0.4))
+                        font.pixelSize: Style.Theme.fontLg
                         font.family: "Consolas"
                         font.weight: cell.isActive ? Font.Black : Font.Normal
                         color: {
@@ -115,7 +115,7 @@ Rectangle {
             Layout.fillWidth: true
             Text {
                 text: "Row: A (" + root.scoreA + ") | Col: B (" + root.scoreB + ")"
-                font.pixelSize: Style.Theme.fontXs
+                font.pixelSize: Style.Theme.fontLg
                 font.family: "Consolas"
                 color: Style.Theme.textMuted
             }

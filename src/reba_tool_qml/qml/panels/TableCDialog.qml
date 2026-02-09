@@ -20,12 +20,12 @@ Window {
     function positionToRight(winX, winY, winW, winH, screenRight, screenLeft, screenTop, screenBottom) {
         var newX = winX + winW + 10;
         var newY = winY + (winH - root.height) / 2;
-        if (newX + root.width > screenRight)
-            newX = winX - root.width - 10;
-        if (newY < screenTop)
-            newY = screenTop;
-        if (newY + root.height > screenBottom)
-            newY = screenBottom - root.height;
+    //    if (newX + root.width > screenRight)
+    //        newX = winX - root.width - 10;
+    //    if (newY < screenTop)
+    //        newY = screenTop;
+    //    if (newY + root.height > screenBottom)
+    //        newY = screenBottom - root.height;
         root.x = newX;
         root.y = newY;
     }
