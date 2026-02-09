@@ -18,10 +18,10 @@ import "footer"
  * │     VideoArea       │   (320px)      │
  * │     (flex-1)        │  參數/趨勢/匯出 │
  * │                     │                │
- * ├──────┬──────────────┴───┬────────────┤
- * │Joint │   GroupScores    │ TableC     │
- * │Table │   (flex-1)       │ Matrix     │
- * │(25%) │                  │ (35%)      │
+ * ├──────┬──────┬───────────┴───┬────────────┤
+ * │Param │Joint │  GroupScores  │ TableC     │
+ * │Panel │Table │   (flex-1)   │ Matrix     │
+ * │(15%) │(20%) │              │ (30%)      │
  * ├──────┴──────────────────┴────────────┤
  * │           StatusBar (24px)           │
  * └──────────────────────────────────────┘
@@ -184,6 +184,12 @@ ApplicationWindow {
                     dataBridge.log("正在停止處理...");
                     videoBridge.stop();
                 }
+                onRecordToggleClicked: {
+                    if (videoBridge.isRecording)
+                        videoBridge.stopRecording();
+                    else
+                        videoBridge.startRecording();
+                }
             }
         }
 
@@ -204,20 +210,28 @@ ApplicationWindow {
             Layout.maximumHeight: Style.Theme.bottomHeight
             spacing: 0
 
-            // 左欄：關節角度表（25%）
+            // 最左欄：評估參數設定（15%）
+            ParameterPanel {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                Layout.preferredWidth: 15  // ratio
+                Layout.minimumWidth: 135
+            }
+
+            // 左欄：關節角度表（20%）
             JointTable {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-                Layout.preferredWidth: 25  // ratio
-                Layout.minimumWidth: 200
+                Layout.preferredWidth: 20  // ratio
+                Layout.minimumWidth: 180
             }
 
-            // 中欄：群組評分（flex-1）
+            // 中欄：群組評分（35%）
             GroupScores {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-                Layout.preferredWidth: 40  // ratio
-                Layout.minimumWidth: 300
+                Layout.preferredWidth: 35  // ratio
+                Layout.minimumWidth: 320
 
                 groupAScore: rebaBridge.scoreA
                 groupBScore: rebaBridge.scoreB
@@ -225,11 +239,11 @@ ApplicationWindow {
                 activityScore: rebaBridge.activityScore
             }
 
-            // 右欄：Table C 矩陣（35%）
+            // 右欄：Table C 矩陣（30%）
             TableCMatrix {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-                Layout.preferredWidth: 35  // ratio
+                Layout.preferredWidth: 30  // ratio
                 Layout.minimumWidth: 250
 
                 scoreA: tableCModel.scoreA

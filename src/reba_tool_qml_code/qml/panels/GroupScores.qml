@@ -5,7 +5,7 @@ import "../style" as Style
 
 /**
  * 底部中間：群組評分分解
- * 左側 2 格：Group A Score / Group B Score
+ * 左側 2 格：Group A Score / Group B Score（含子分數分解）
  * 右側大格：Score C + Activity 修正
  */
 Rectangle {
@@ -62,6 +62,7 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 radius: Style.Theme.borderRadius
+                Layout.minimumWidth: 1.1
                 color: Qt.rgba(Style.Theme.surface900.r,
                                Style.Theme.surface900.g,
                                Style.Theme.surface900.b, 0.5)
@@ -87,6 +88,13 @@ Rectangle {
                             font.pixelSize: Style.Theme.fontLg
                             color: Style.Theme.textMuted
                             opacity: 0.6
+                        }
+                        Text {
+                            text: rebaBridge.trunkScore + "+" + rebaBridge.neckScore + "+" + rebaBridge.legScore + "+" + rebaBridge.loadScore
+                            font.pixelSize: Style.Theme.fontLg
+                            font.family: "Consolas"
+                            color: Style.Theme.accentNeonGreen
+                            opacity: 0.8
                         }
                     }
                     Text {
@@ -205,10 +213,16 @@ Rectangle {
                             color: Style.Theme.textMuted
                             opacity: 0.6
                         }
+                        Text {
+                            text: rebaBridge.upperArmScore + "+" + rebaBridge.forearmScore + "+" + rebaBridge.wristScore + "+" + rebaBridge.couplingScore
+                            font.pixelSize: Style.Theme.fontLg
+                            font.family: "Consolas"
+                            color: Style.Theme.accentNeonBlue
+                            opacity: 0.8
+                        }
                     }
                     Text {
-                        text: root.groupBScore.toStr
-                        ing()
+                        text: root.groupBScore.toString()
                         font.pixelSize: Style.Theme.fontXxl
                         font.weight: Font.Black
                         color: Style.Theme.accentNeonBlue

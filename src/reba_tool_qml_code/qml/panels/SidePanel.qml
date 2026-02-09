@@ -5,9 +5,9 @@ import "../style" as Style
 
 /**
  * 右側面板
- * - 評估參數設定（分析側邊、握持品質、負荷重量）
  * - 即時評分趨勢圖
  * - 匯出 CSV / 重設分析按鈕
+ * - 錄影按鈕
  */
 Rectangle {
     id: root
@@ -16,6 +16,7 @@ Rectangle {
     // ── 信號（向上傳遞操作）──
     signal exportCsvClicked()
     signal resetClicked()
+    signal recordToggleClicked()
 
     // ── 左側邊線 ──
     Rectangle {
@@ -32,138 +33,7 @@ Rectangle {
         spacing: 0
 
         // ══════════════════════════════════
-        // 區塊一：評估參數設定
-        // ══════════════════════════════════
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: paramCol.implicitHeight + 32
-            color: "transparent"
-
-            // 底部分隔線
-            Rectangle {
-                anchors.left: parent.left; anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                height: 1; color: Style.Theme.surface800
-            }
-
-            ColumnLayout {
-                id: paramCol
-                anchors.fill: parent
-                anchors.margins: Style.Theme.padding
-                spacing: 12
-
-                // 標題
-                Row {
-                    spacing: 8
-                    Text {
-                        text: "\u2699"  // ⚙
-                        font.pixelSize: Style.Theme.fontSm
-                        color: Style.Theme.textMuted
-                    }
-                    Text {
-                        text: "評估參數設定"
-                        font.pixelSize: Style.Theme.fontSm
-                        font.bold: true
-                        font.letterSpacing: 3
-                        font.capitalization: Font.AllUppercase
-                        color: Style.Theme.textMuted
-                    }
-                }
-
-                // 兩欄：分析側邊 + 握持品質
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 4
-                        Text {
-                            text: "分析側邊"
-                            font.pixelSize: Style.Theme.fontXs
-                            color: Style.Theme.textMuted
-                        }
-                        ComboBox {
-                            id: sideCombo
-                            Layout.fillWidth: true
-                            model: ["右側 (Right)", "左側 (Left)"]
-                            font.pixelSize: Style.Theme.fontXs
-                            currentIndex: settingsBridge.side === "left" ? 1 : 0
-                            onActivated: {
-                                var val = currentIndex === 1 ? "left" : "right";
-                                settingsBridge.setSide(val);
-                                videoBridge.setParameters(
-                                    settingsBridge.side,
-                                    settingsBridge.loadWeight,
-                                    settingsBridge.coupling);
-                            }
-                        }
-                    }
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 4
-                        Text {
-                            text: "握持品質"
-                            font.pixelSize: Style.Theme.fontXs
-                            color: Style.Theme.textMuted
-                        }
-                        ComboBox {
-                            id: couplingCombo
-                            Layout.fillWidth: true
-                            model: ["優良 (Good)", "普通 (Fair)", "不良 (Poor)"]
-                            font.pixelSize: Style.Theme.fontXs
-                            currentIndex: {
-                                if (settingsBridge.coupling === "fair") return 1;
-                                if (settingsBridge.coupling === "poor") return 2;
-                                return 0;
-                            }
-                            onActivated: {
-                                var vals = ["good", "fair", "poor"];
-                                settingsBridge.setCoupling(vals[currentIndex]);
-                                videoBridge.setParameters(
-                                    settingsBridge.side,
-                                    settingsBridge.loadWeight,
-                                    settingsBridge.coupling);
-                            }
-                        }
-                    }
-                }
-
-                // 負荷重量
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 4
-                    Text {
-                        text: "負荷重量 (kg)"
-                        font.pixelSize: Style.Theme.fontXs
-                        color: Style.Theme.textMuted
-                    }
-                    SpinBox {
-                        id: loadSpinBox
-                        Layout.fillWidth: true
-                        from: 0; to: 10000; stepSize: 100
-                        value: Math.round(settingsBridge.loadWeight * 100)
-                        property int decimals: 1
-                        textFromValue: function(value, locale) {
-                            return (value / 100).toFixed(1)
-                        }
-                        valueFromText: function(text, locale) {
-                            return Math.round(parseFloat(text) * 100)
-                        }
-                        onValueModified: {
-                            settingsBridge.setLoadWeight(value / 100.0);
-                            videoBridge.setParameters(
-                                settingsBridge.side,
-                                settingsBridge.loadWeight,
-                                settingsBridge.coupling);
-                        }
-                    }
-                }
-            }
-        }
-
-        // ══════════════════════════════════
-        // 區塊二：即時評分趨勢
+        // 即時評分趨勢
         // ══════════════════════════════════
         ColumnLayout {
             Layout.fillWidth: true
@@ -273,7 +143,7 @@ Rectangle {
                 }
             }
 
-            // ── 底部按鈕 ──
+            // ── 匯出/重設 按鈕 ──
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
@@ -324,6 +194,38 @@ Rectangle {
                     }
                     onClicked: root.resetClicked()
                 }
+            }
+
+            // ── 錄影按鈕 ──
+            Button {
+                Layout.fillWidth: true
+                text: videoBridge.isRecording ? "\u23F8 暫停錄影" : "\u23FA 開始錄影"
+                font.pixelSize: Style.Theme.fontSm
+                font.bold: true
+                font.capitalization: Font.AllUppercase
+                implicitHeight: 36
+                background: Rectangle {
+                    radius: 4
+                    color: videoBridge.isRecording
+                           ? Qt.rgba(0.96, 0.25, 0.37, 0.15)
+                           : Qt.rgba(Style.Theme.accentNeonGreen.r,
+                                     Style.Theme.accentNeonGreen.g,
+                                     Style.Theme.accentNeonGreen.b, 0.1)
+                    border.color: videoBridge.isRecording
+                                  ? Qt.rgba(0.96, 0.25, 0.37, 0.4)
+                                  : Qt.rgba(Style.Theme.accentNeonGreen.r,
+                                            Style.Theme.accentNeonGreen.g,
+                                            Style.Theme.accentNeonGreen.b, 0.3)
+                    border.width: 1
+                }
+                contentItem: Text {
+                    text: parent.text
+                    font: parent.font
+                    color: videoBridge.isRecording ? "#f43f5e" : Style.Theme.accentNeonGreen
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                onClicked: root.recordToggleClicked()
             }
         }
     }

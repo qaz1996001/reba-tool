@@ -14,14 +14,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 環境設定
 ```bash
-# 安裝依賴 (使用 uv 套件管理器)
-uv sync
-
-# 執行 Widget 版 (原版)
-uv run python src/reba_tool/MediaPipeApp.py
-
-# 執行 QML 版 (新版)
-uv run src/reba_tool_qml/main.py
+uv sync                                    # 安裝依賴
+uv run python src/reba_tool/MediaPipeApp.py  # Widget 版
+uv run src/reba_tool_qml/main.py             # QML 版（原版佈局）
+uv run src/reba_tool_qml_code/main.py        # QML Code 版（霓虹 Dashboard）
 ```
 
 ### 程式碼品質
@@ -38,7 +34,7 @@ git commit -m "type(scope): description"
 ```
 
 ### Module Import Convention
-後端模組使用直接 import（非套件相對路徑）：`from angle_calculator import AngleCalculator`。QML 版透過 `sys.path.insert(0, reba_tool_dir)` 複用所有後端模組。
+後端模組使用直接 import：`from angle_calculator import AngleCalculator`。QML 版透過 `sys.path.insert(0, reba_tool_dir)` 複用所有後端模組。
 
 ---
 
@@ -51,15 +47,18 @@ git commit -m "type(scope): description"
 # 1. 執行 QML 版，確認無 QML 載入錯誤
 uv run src/reba_tool_qml/main.py 2>&1 | findstr /i "error unavailable TypeError"
 
-# 2. 確認無 style 警告
-uv run src/reba_tool_qml/main.py 2>&1 | findstr /i "does not support customization"
+# 2. QML Code 版驗證
+uv run src/reba_tool_qml_code/main.py 2>&1 | findstr /i "error unavailable TypeError Expected"
 
-# 3. Lint
-flake8 src/reba_tool_qml/
+# 3. 確認無 style 警告
+uv run src/reba_tool_qml_code/main.py 2>&1 | findstr /i "does not support customization"
+
+# 4. Lint
+flake8 src/reba_tool_qml/ src/reba_tool_qml_code/
 ```
 
 ### 驗證清單
-- [ ] QML 載入無錯誤 (無 "unavailable"、"TypeError")
+- [ ] QML 載入無錯誤 (無 "unavailable"、"TypeError"、"Expected token")
 - [ ] 無 native style 自訂化警告
 - [ ] 攝影機/影片播放正常
 - [ ] REBA 分數即時更新
@@ -90,6 +89,7 @@ flake8 src/reba_tool_qml/
 | 2026-02-06 | QML component 宣告 `property var tableCModel: null` 再用 `tableCModel: tableCModel` 綁定，右側解析到自己的 null property 而非 context property | 永遠不要讓 component property 名與 context property 名相同，改用不同名稱（如 `tcModel`）避免遮蔽 |
 | 2026-02-06 | VideoRecorder 在 `_handle_frame()` 主線程中直接呼叫 `cv2.VideoWriter.write()`，磁碟 I/O 阻塞 GUI → 卡頓 | 用 `Queue` + 背景 `threading.Thread` 解耦，`write_frame()` 只做 `queue.put()`，背景線程做磁碟寫入 |
 | 2026-02-06 | 影片自然播完時 `_on_finished()` 未清理 VideoWorker，舊 Worker 的 EventBus 回調累積，下次播放每幀觸發 N 次 `_handle_frame` → GUI 越來越卡 | `_on_finished()` 中必須呼叫 `_worker.cleanup()` 並設 `_worker = None`，確保 EventBus 回調被移除 |
+| 2026-02-06 | QML property binding 中 `.toString()` 被換行為 `.toStr\ning()`，導致 `Expected token ':'` 語法錯誤，該 QML 檔案 Type unavailable | QML property binding 中的方法呼叫鏈（`.toString()`、`.toFixed()` 等）**不可斷行**，必須保持在同一行 |
 
 ### 禁止事項
 
@@ -104,6 +104,7 @@ flake8 src/reba_tool_qml/
 - ❌ 不可讓 QML component property 名與 context property 名相同（會產生同名遮蔽，綁定解析到自己的 null）
 - ❌ 不可從 QML JavaScript 直接呼叫 `QAbstractTableModel.data()`/`index()`（非 Q_INVOKABLE，靜默回傳 undefined），須用 `@Slot` wrapper
 - ❌ 建立新 VideoWorker 前，必須對舊 Worker 呼叫 `cleanup()` 移除 EventBus 回調，否則 handler 累積導致每幀多次處理
+- ❌ QML property binding 中方法呼叫（`.toString()`、`.toFixed()`）不可被換行/斷行，否則產生 `Expected token ':'` 語法錯誤
 
 ### 更新時機
 
@@ -115,33 +116,33 @@ flake8 src/reba_tool_qml/
 
 ## Architecture
 
-### 雙版本架構
+### 三版本架構
 ```
-src/reba_tool/           ← Widget 版 (原版, PySide6 Widgets)
-  ├── MediaPipeApp.py    ← Widget 版入口
+src/reba_tool/               ← Widget 版 (原版, PySide6 Widgets)
+  ├── MediaPipeApp.py        ← Widget 版入口
   ├── angle_calculator.py, reba_scorer.py, data_logger.py  ← 後端 (零 Qt 依賴)
   ├── video_controller.py, video_pipeline.py, event_bus.py  ← ViewModel + 管線
   ├── frame_renderer.py, processing_config.py               ← 渲染/配置
-  └── ui/                ← 薄 Qt 層 (video_worker.py, qt_config.py)
+  └── ui/                    ← 薄 Qt 層 (video_worker.py, qt_config.py)
 
-src/reba_tool_qml/       ← QML 版 (新版, QtQuick/QML)
-  ├── main.py            ← QML 版入口
-  ├── bridge/            ← Python↔QML 橋接 (QObject 子類)
-  │   ├── image_provider.py   ← QQuickImageProvider
-  │   ├── video_bridge.py     ← 包裝 VideoController
-  │   ├── video_recorder.py   ← MP4 錄影 (Queue + 背景線程)
-  │   ├── reba_bridge.py      ← REBA 分數 Property
-  │   ├── settings_bridge.py  ← 參數雙向綁定
-  │   ├── data_bridge.py      ← 匯出/日誌
-  │   ├── score_table_model.py ← 17x5 分數表
-  │   └── table_c_model.py    ← 12x12 Table C
-  ├── qml/               ← QML UI 檔案
-  │   ├── main.qml, components/, panels/
-  │   └── style/Theme.qml     ← 主題 Singleton
-  └── config/            ← 主題 JSON (default, neon_navy)
+src/reba_tool_qml/           ← QML 版 (原版佈局, QtQuick/QML)
+  ├── main.py                ← QML 版入口
+  ├── bridge/                ← Python↔QML 橋接 (QObject 子類)
+  ├── qml/                   ← QML UI (LeftPanel/RightPanel 雙欄佈局)
+  └── config/                ← 主題 JSON
+
+src/reba_tool_qml_code/      ← QML Code 版 (霓虹 Dashboard 佈局)
+  ├── main.py                ← Code 版入口
+  ├── bridge/                ← 複用 reba_tool_qml 的 bridge 層（零修改）
+  ├── qml/                   ← 深色霓虹主題 Dashboard UI
+  │   ├── main.qml           ← Header + Video/Side + Bottom 3-col + Footer
+  │   ├── panels/            ← VideoArea, SidePanel, JointTable, GroupScores, TableCMatrix
+  │   ├── footer/            ← StatusBar
+  │   └── style/Theme.qml   ← 霓虹主題 Singleton
+  └── config/                ← theme_dark_neon.json
 ```
 
-### Data Flow (QML 版)
+### Data Flow (QML 版共用)
 ```
 [Worker Thread]                    [Main Thread]              [QML Render]
 VideoPipeline.run()
@@ -186,6 +187,7 @@ VideoPipeline.run()
 | 左右面板比例失衡 | `maximumWidth` 限制面板或 `preferredWidth` 混用 ratio/絕對值 | 兩側 `fillWidth: true` + ratio，用 `minimumWidth` 保護 |
 | QML 綁定值為 undefined/null | component property 名與 context property 名相同，遮蔽 | 使用不同名稱避免遮蔽 |
 | Table C 格子全空無文字 | 從 QML 呼叫 `model.data()`/`index()` 靜默失敗 | 用 `@Slot` wrapper 方法 + `var dep = _sa + _sb;` 響應式依賴 |
+| `Type XXX unavailable` + `Expected token ':'` | QML property binding 中方法呼叫被斷行（如 `.toStr` / `ing()`） | 方法呼叫鏈不可換行，保持在同一行 |
 
 ### 常見效能問題
 
@@ -203,7 +205,8 @@ VideoPipeline.run()
 | `README.md` | 專案總覽 |
 | `docs/` | 詳細文件 |
 | `src/reba_tool/reba_scorer.py` | REBA 計分核心邏輯 |
-| `src/reba_tool_qml/qml/style/Theme.qml` | QML 主題設定 (含 leftRatio/rightRatio) |
+| `src/reba_tool_qml/qml/style/Theme.qml` | QML 原版主題設定 |
+| `src/reba_tool_qml_code/qml/style/Theme.qml` | QML Code 版霓虹主題設定 |
 
 ---
 

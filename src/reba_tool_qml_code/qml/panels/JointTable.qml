@@ -116,8 +116,8 @@ Rectangle {
                                                             Style.Theme.surface800.g,
                                                             Style.Theme.surface800.b, 0.3)
 
-                        // 取得角度值
-                        property string angleValue: {
+                        // 取得原始角度 float
+                        property real rawAngle: {
                             switch (rowIndex) {
                                 case 0: return rebaBridge.neckAngle;
                                 case 1: return rebaBridge.trunkAngle;
@@ -125,9 +125,12 @@ Rectangle {
                                 case 3: return rebaBridge.upperArmAngle;
                                 case 4: return rebaBridge.forearmAngle;
                                 case 5: return rebaBridge.wristAngle;
-                                default: return "--";
+                                default: return 0;
                             }
                         }
+                        // 格式化為兩位小數 + 度符號
+                        property string angleValue: rawAngle !== 0
+                            ? rawAngle.toFixed(2) + "\u00B0" : "--"
 
                         // 取得分數值
                         property int scoreValue: {
@@ -170,11 +173,14 @@ Rectangle {
                             Item {
                                 width: parent.width * 0.3; height: parent.height
                                 Text {
-                                    anchors.centerIn: parent
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 8
                                     text: rowDelegate.angleValue
                                     font.pixelSize: Style.Theme.fontXl
                                     font.family: "Consolas"
                                     color: Style.Theme.accentNeonBlue
+                                    horizontalAlignment: Text.AlignRight
                                 }
                             }
                             Item {
