@@ -31,6 +31,7 @@ class ProcessingConfig:
     COLOR_NECK = (0, 0, 255)        # 紅色
     COLOR_TRUNK = (0, 165, 255)     # 橙色
     COLOR_UPPER_ARM = (0, 255, 255) # 黃色
+    COLOR_FOREARM = (255, 255, 0)    # 青色 (Cyan)
     COLOR_WRIST = (0, 255, 0)       # 綠色
     COLOR_LEG = (255, 0, 0)         # 藍色
 
