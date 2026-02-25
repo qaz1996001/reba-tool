@@ -6,7 +6,9 @@
 """
 
 import os
+import time
 from datetime import datetime
+from pathlib import Path
 
 from PySide6.QtCore import QObject, Property, Signal, Slot
 
@@ -197,14 +199,33 @@ class VideoBridge(QObject):
         filename = names.get(file_type, f"reba_{timestamp}.dat")
         return os.path.join(results_dir, filename).replace("\\", "/")
 
+    def _build_output_dir(self) -> str:
+        """
+        根據影片來源和時間戳建立輸出目錄路徑。
+        影片：results/{原始檔名}_{YYYYMMDD_HHMMSS}/
+        攝影機：results/{YYYYMMDD_HHMMSS}/
+        """
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        results_dir = os.path.join(os.getcwd(), "results")
+
+        if self._video_source:
+            # 影片來源：取檔名（不含副檔名）
+            source_name = Path(self._video_source).stem
+            dir_name = f"{source_name}_{timestamp}"
+        else:
+            # 攝影機來源：僅用時間戳
+            dir_name = timestamp
+
+        return os.path.join(results_dir, dir_name)
+
     @Slot()
     def startRecording(self):
         """手動開始錄影片段"""
         if self._recorder.is_recording:
             return
-        path = self.suggestFilePath("video")
+        output_dir = self._build_output_dir()
         fps = self._fps if self._fps > 0 else 30.0
-        self._recorder.start(path, fps)
+        self._recorder.start(output_dir, fps)
         self._auto_recording = False
         self.isRecordingChanged.emit()
         self.recordingStarted.emit()
@@ -214,10 +235,10 @@ class VideoBridge(QObject):
         """手動停止錄影"""
         if not self._recorder.is_recording:
             return
-        path = self._recorder.stop()
+        out_dir = self._recorder.stop()
         self._auto_recording = False
         self.isRecordingChanged.emit()
-        self.recordingStopped.emit(path)
+        self.recordingStopped.emit(out_dir)
 
     # ========== 內部方法 ==========
 
@@ -235,9 +256,9 @@ class VideoBridge(QObject):
         self.frameCounterChanged.emit()
         self.isProcessingChanged.emit()
 
-        # 自動開始全程錄影
-        auto_path = self.suggestFilePath("video")
-        self._recorder.start(auto_path, 30.0)
+        # 自動開始全程錄影（輸出到目錄）
+        auto_dir = self._build_output_dir()
+        self._recorder.start(auto_dir, 30.0)
         self._auto_recording = True
         self.isRecordingChanged.emit()
         self.recordingStarted.emit()
@@ -258,9 +279,15 @@ class VideoBridge(QObject):
         # 記錄資料
         self._controller.record_frame(frame, angles, reba_score, risk_level, fps, details)
 
-        # 錄影：寫入標註幀
+        # 錄影：寫入標註幀 + 資料
         if self._recorder.is_recording:
-            self._recorder.write_frame(frame)
+            frame_data = {
+                'timestamp': time.time(),
+                'angles': angles,
+                'reba_score': reba_score,
+                'risk_level': risk_level,
+            }
+            self._recorder.write_frame(frame, frame_data)
 
         # 更新影像提供者
         self._image_provider.update_frame(frame)
@@ -281,10 +308,10 @@ class VideoBridge(QObject):
         """處理完成"""
         # 自動停止錄影（全程模式）
         if self._recorder.is_recording and self._auto_recording:
-            path = self._recorder.stop()
+            out_dir = self._recorder.stop()
             self._auto_recording = False
             self.isRecordingChanged.emit()
-            self.recordingStopped.emit(path)
+            self.recordingStopped.emit(out_dir)
 
         # 清理舊 Worker 的 EventBus 回調，避免多次選擇影片後
         # handler 累積導致每幀觸發多次 _handle_frame → GUI 卡頓

@@ -264,7 +264,8 @@ class VideoPipeline:
         if results.pose_landmarks:
             self._renderer.draw_pose_landmarks(
                 frame, results.pose_landmarks,
-                self._mp_drawing, self._mp_holistic, self._mp_drawing_styles
+                self._mp_drawing, self._mp_holistic, self._mp_drawing_styles,
+                side=self._side
             )
             angles = self._angle_calc.calculate_all_angles(results.pose_landmarks, self._side)
             frame, angle_text_items = self._renderer.draw_angle_lines(
