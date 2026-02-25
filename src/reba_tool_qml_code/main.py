@@ -10,6 +10,7 @@ from pathlib import Path
 # 必須在 QApplication 建立前設定 Fusion style，避免 Windows native style 警告
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Fusion"
 
+
 # 將 reba_tool 後端模組加入 Python 路徑（複用所有後端）
 _this_dir = Path(__file__).resolve().parent
 _reba_tool_dir = _this_dir.parent / "reba_tool"
