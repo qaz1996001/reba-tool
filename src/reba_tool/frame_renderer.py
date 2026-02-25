@@ -31,9 +31,37 @@ class FrameRenderer:
             self.font_chinese = None
             self.font_chinese_small = None
 
-    def draw_pose_landmarks(self, frame, landmarks, mp_drawing, mp_holistic, mp_drawing_styles):
+    # MediaPipe landmark 側邊歸屬
+    _LEFT_LANDMARKS = {1, 2, 3, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31}
+    _RIGHT_LANDMARKS = {4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32}
+    _CENTER_LANDMARKS = {0}  # nose
+    _CENTER_CONNECTIONS = {(9, 10), (11, 12), (23, 24)}
+
+    def _filter_connections_by_side(self, all_connections, side):
+        """根據側邊過濾骨架連線"""
+        if side == 'right':
+            visible = self._RIGHT_LANDMARKS | self._CENTER_LANDMARKS
+        else:
+            visible = self._LEFT_LANDMARKS | self._CENTER_LANDMARKS
+        filtered = []
+        for a, b in all_connections:
+            norm = (min(a, b), max(a, b))
+            if norm in self._CENTER_CONNECTIONS:
+                filtered.append((a, b))
+            elif a in visible and b in visible:
+                filtered.append((a, b))
+        return frozenset(filtered)
+
+    def _get_visible_landmarks(self, side):
+        """取得選定側的可見 landmark 索引"""
+        if side == 'right':
+            return self._RIGHT_LANDMARKS | self._CENTER_LANDMARKS | {9, 10, 11, 12, 23, 24}
+        else:
+            return self._LEFT_LANDMARKS | self._CENTER_LANDMARKS | {9, 10, 11, 12, 23, 24}
+
+    def draw_pose_landmarks(self, frame, landmarks, mp_drawing, mp_holistic, mp_drawing_styles, side=None):
         """
-        繪製姿態關鍵點
+        繪製姿態關鍵點（支援側邊過濾）
 
         Args:
             frame: OpenCV 影像
@@ -41,11 +69,29 @@ class FrameRenderer:
             mp_drawing: mediapipe.solutions.drawing_utils
             mp_holistic: mediapipe.solutions.holistic
             mp_drawing_styles: mediapipe.solutions.drawing_styles
+            side: 'left'/'right' 僅畫該側，None 畫全部
         """
-        mp_drawing.draw_landmarks(
-            frame, landmarks, mp_holistic.POSE_CONNECTIONS,
-            landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
-        )
+        if side is None:
+            mp_drawing.draw_landmarks(
+                frame, landmarks, mp_holistic.POSE_CONNECTIONS,
+                landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
+            )
+        else:
+            filtered_conns = self._filter_connections_by_side(mp_holistic.POSE_CONNECTIONS, side)
+            visible_indices = self._get_visible_landmarks(side)
+            h, w = frame.shape[:2]
+            # 繪製連線
+            for a, b in filtered_conns:
+                lm_a = landmarks.landmark[a]
+                lm_b = landmarks.landmark[b]
+                pt_a = (int(lm_a.x * w), int(lm_a.y * h))
+                pt_b = (int(lm_b.x * w), int(lm_b.y * h))
+                cv2.line(frame, pt_a, pt_b, (0, 255, 0), 2)
+            # 繪製關鍵點
+            for idx in visible_indices:
+                lm = landmarks.landmark[idx]
+                pt = (int(lm.x * w), int(lm.y * h))
+                cv2.circle(frame, pt, 4, (0, 0, 255), -1)
 
     def draw_angle_lines(self, frame, landmarks, angles, side, show_lines, show_values):
         """
@@ -114,8 +160,31 @@ class FrameRenderer:
                     'bg_style': 'transparent',
                 })
 
-        # 上臂角度線（黃色）
+        # 上臂角度線（黃色）— vertical_ref→shoulder→elbow（上臂與垂直線夾角）
         if show_lines and angles.get('upper_arm') is not None:
+            if side == 'right':
+                shoulder = get_point(ac.RIGHT_SHOULDER)
+                elbow = get_point(ac.RIGHT_ELBOW)
+            else:
+                shoulder = get_point(ac.LEFT_SHOULDER)
+                elbow = get_point(ac.LEFT_ELBOW)
+
+            # 垂直參考線：從肩膀向下延伸 60 像素
+            vertical_ref = (shoulder[0], shoulder[1] + 60)
+            cv2.line(frame, vertical_ref, shoulder, cfg.COLOR_UPPER_ARM, cfg.ANGLE_LINE_THICKNESS)
+            cv2.line(frame, shoulder, elbow, cfg.COLOR_UPPER_ARM, cfg.ANGLE_LINE_THICKNESS)
+
+            if show_values:
+                offset_x = 20 if side == 'right' else -80
+                text_pos = (shoulder[0] + offset_x, shoulder[1] - 10)
+                text_items.append({
+                    'text': f"{angles['upper_arm']:.1f}\u00b0", 'position': text_pos,
+                    'font': self.font_chinese_small, 'color': cfg.COLOR_UPPER_ARM,
+                    'bg_style': 'transparent',
+                })
+
+        # 前臂角度線（青色 Cyan）
+        if show_lines and angles.get('forearm') is not None:
             if side == 'right':
                 shoulder = get_point(ac.RIGHT_SHOULDER)
                 elbow = get_point(ac.RIGHT_ELBOW)
@@ -125,15 +194,15 @@ class FrameRenderer:
                 elbow = get_point(ac.LEFT_ELBOW)
                 wrist = get_point(ac.LEFT_WRIST)
 
-            cv2.line(frame, shoulder, elbow, cfg.COLOR_UPPER_ARM, cfg.ANGLE_LINE_THICKNESS)
-            cv2.line(frame, elbow, wrist, cfg.COLOR_UPPER_ARM, cfg.ANGLE_LINE_THICKNESS)
+            cv2.line(frame, shoulder, elbow, cfg.COLOR_FOREARM, cfg.ANGLE_LINE_THICKNESS)
+            cv2.line(frame, elbow, wrist, cfg.COLOR_FOREARM, cfg.ANGLE_LINE_THICKNESS)
 
             if show_values:
-                offset_x = 20 if side == 'right' else -80
-                text_pos = (elbow[0] + offset_x, elbow[1] - 10)
+                offset_x = -80 if side == 'right' else 20
+                text_pos = (elbow[0] + offset_x, elbow[1] + 20)
                 text_items.append({
-                    'text': f"{angles['upper_arm']:.1f}\u00b0", 'position': text_pos,
-                    'font': self.font_chinese_small, 'color': cfg.COLOR_UPPER_ARM,
+                    'text': f"{angles['forearm']:.1f}\u00b0", 'position': text_pos,
+                    'font': self.font_chinese_small, 'color': cfg.COLOR_FOREARM,
                     'bg_style': 'transparent',
                 })
 
