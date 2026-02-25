@@ -211,14 +211,16 @@ class REBAScorer:
             軀幹分數 (1-5)
             
         評分標準：
-        - 1分: 直立 (0-20°)
-        - 2分: 屈曲或伸展 0-20°
+        - 1分: 近乎直立 (≤5°)
+        - 2分: 屈曲或伸展 5-20°
         - 3分: 屈曲 20-60° 或 伸展 >20°
         - 4分: 屈曲 >60°
         - 加分: 扭轉或側向彎曲 +1
         """
         # 基本分數
-        if trunk_angle <= 20:
+        if trunk_angle <= 5:
+            base_score = 1  # 近乎直立（REBA Step 2: erect）
+        elif trunk_angle <= 20:
             base_score = 2  # 0-20度屈曲/伸展
         elif trunk_angle <= 60:
             base_score = 3  # 20-60度屈曲
@@ -276,37 +278,37 @@ class REBAScorer:
     def score_leg(self, leg_angle: float, bilateral_support: bool = True) -> int:
         """
         腿部評分
-        
+
         Args:
-            leg_angle: 腿部角度（度），膝關節角度
+            leg_angle: 膝關節屈曲角度（度），0°=伸直, 90°=直角彎曲
             bilateral_support: 是否雙腳支撐
-            
+
         Returns:
-            腿部分數 (1-2)
-            
+            腿部分數 (1-4)
+
         評分標準：
         - 1分: 雙腳支撐，行走或坐姿
         - 2分: 單腳站立或膝蓋彎曲
         - 加分: 膝蓋彎曲30-60° +1
         - 加分: 膝蓋彎曲>60° +2
         """
-        # 基本分數
-        if bilateral_support and leg_angle >= 150:
+        # 基本分數（屈曲角度 ≤30° 視為「幾乎站直」）
+        if bilateral_support and leg_angle <= 30:
             base_score = 1  # 雙腳支撐，幾乎站直
         else:
             base_score = 2  # 單腳或膝蓋彎曲
-        
-        # 膝蓋彎曲調整（使用180度減去角度來判斷彎曲程度）
-        knee_flexion = 180 - leg_angle
+
+        # 膝蓋彎曲調整（直接使用屈曲角度）
+        knee_flexion = leg_angle
         adjustment = 0
         if 30 <= knee_flexion <= 60:
             adjustment += 1
         elif knee_flexion > 60:
             adjustment += 2
-        
+
         final_score = min(base_score + adjustment, 4)  # 最高4分
-        
-        logger.debug(f"腿部評分: 角度={leg_angle:.1f}°, 膝彎曲={knee_flexion:.1f}°, "
+
+        logger.debug(f"腿部評分: 屈曲={knee_flexion:.1f}°, "
                     f"基本分數={base_score}, 調整={adjustment}, 最終分數={final_score}")
         
         return final_score
@@ -315,41 +317,38 @@ class REBAScorer:
                        is_raised: bool = False, has_support: bool = False) -> int:
         """
         上臂評分
-        
+
         Args:
-            upper_arm_angle: 上臂角度（度），180度表示手臂垂直向下
+            upper_arm_angle: 上臂與垂直線的夾角（度），0°=自然下垂, 90°=水平抬起
+                gravity-relative 的 unsigned angle (0-180°)
             is_abducted: 手臂是否外展或旋轉
             is_raised: 肩膀是否抬高
             has_support: 是否有支撐點或姿勢順應重力
-            
+
         Returns:
             上臂分數 (1-6)
-            
-        評分標準：
-        - 1分: 伸展20° 到屈曲20°
-        - 2分: 伸展>20° 或屈曲20-45°
-        - 3分: 屈曲45-90°
-        - 4分: 屈曲>90°
+
+        評分標準（gravity-relative unsigned angle）：
+        - 1分: ≤20°（近乎下垂，含 extension 和 minor flexion）
+        - 2分: 20-45°（輕度抬起）
+        - 3分: 45-90°（中度抬起）
+        - 4分: >90°（超過水平）
         - 加分: 外展或旋轉 +1
         - 加分: 肩膀抬高 +1
         - 減分: 有支撐點 -1
         """
-        # 將角度轉換為相對於垂直位置的屈曲角度
-        # 180度 = 垂直向下 = 0度屈曲
-        # 90度 = 水平 = 90度屈曲
-        flexion = 180 - upper_arm_angle
-        
+        # gravity-relative angle: 0°=下垂, 90°=水平, 180°=過頭
+        flexion = upper_arm_angle
+
         # 基本分數
-        if -20 <= flexion <= 20:
-            base_score = 1
-        elif flexion < -20:  # 伸展>20度
-            base_score = 2
-        elif flexion <= 45:  # 屈曲20-45度
-            base_score = 2
-        elif flexion <= 90:  # 屈曲45-90度
-            base_score = 3
-        else:  # 屈曲>90度
-            base_score = 4
+        if flexion <= 20:
+            base_score = 1    # 近乎下垂（±20°）
+        elif flexion <= 45:
+            base_score = 2    # 輕度抬起
+        elif flexion <= 90:
+            base_score = 3    # 中度抬起
+        else:
+            base_score = 4    # 超過水平
         
         # 調整分數
         adjustment = 0
@@ -370,24 +369,28 @@ class REBAScorer:
     def score_forearm(self, forearm_angle: float) -> int:
         """
         前臂評分
-        
+
         Args:
-            forearm_angle: 前臂角度（度），肘關節屈曲角度
-            
+            forearm_angle: 前臂屈曲角度（度）
+                0° = 完全伸直, 90° = 直角彎曲
+
         Returns:
             前臂分數 (1-2)
-            
+
         評分標準：
         - 1分: 屈曲60-100°
         - 2分: 屈曲<60° 或 >100°
         """
-        if 60 <= forearm_angle <= 100:
+        # 傳入的已是屈曲角度，直接使用
+        flexion = forearm_angle
+
+        if 60 <= flexion <= 100:
             score = 1
         else:
             score = 2
-        
-        logger.debug(f"前臂評分: 角度={forearm_angle:.1f}°, 分數={score}")
-        
+
+        logger.debug(f"前臂評分: 屈曲={flexion:.1f}°, 分數={score}")
+
         return score
     
     def score_wrist(self, wrist_angle: float, has_twist: bool = False) -> int:
@@ -835,14 +838,14 @@ if __name__ == "__main__":
     # 創建評分器
     scorer = REBAScorer()
     
-    # 測試角度
+    # 測試角度（使用 REBA 圖表定義的屈曲角度）
     test_angles = {
         'neck': 25.0,        # 頸部前傾25度
         'trunk': 30.0,       # 軀幹前傾30度
-        'upper_arm': 135.0,  # 上臂抬起45度
-        'forearm': 80.0,     # 前臂彎曲80度
+        'upper_arm': 45.0,   # 上臂抬起45度
+        'forearm': 90.0,     # 肘關節屈曲90度（直角彎曲）
         'wrist': 10.0,       # 手腕偏差10度
-        'leg': 175.0         # 腿部幾乎站直
+        'leg': 5.0           # 膝關節屈曲5度（幾乎站直）
     }
     
     # 計算REBA分數

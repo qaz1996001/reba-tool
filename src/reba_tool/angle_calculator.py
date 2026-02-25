@@ -182,14 +182,52 @@ class AngleCalculator:
     
     def calculate_upper_arm_angle(self, landmarks, side: str = 'right') -> Optional[float]:
         """
-        計算上臂角度（肩膀-肘部-手腕）
-        
+        計算上臂角度（上臂與重力垂直線的夾角）
+
+        REBA Step 7: 從肩膀到肘部向量與垂直線的夾角
+        使用 gravity-relative 測量，避免軀幹前傾時角度膨脹
+        0° = 手臂自然下垂, 90° = 水平抬起, 180° = 舉過頭
+
         Args:
             landmarks: MediaPipe pose landmarks
             side: 'left' 或 'right'
-            
+
         Returns:
-            上臂角度（度）或 None
+            上臂抬起角度（度）或 None
+        """
+        if side == 'left':
+            shoulder_idx = self.LEFT_SHOULDER
+            elbow_idx = self.LEFT_ELBOW
+        else:
+            shoulder_idx = self.RIGHT_SHOULDER
+            elbow_idx = self.RIGHT_ELBOW
+
+        # 只需 shoulder + elbow（不再需要 hip）
+        shoulder = self.extract_keypoint(landmarks, shoulder_idx)
+        elbow = self.extract_keypoint(landmarks, elbow_idx)
+
+        if any(p is None for p in [shoulder, elbow]):
+            return None
+
+        # 使用重力參考（垂直線）而非軀幹參考（hip-shoulder）
+        angle = self.calculate_angle_from_vertical(shoulder[:3], elbow[:3])
+
+        return angle
+    
+    def calculate_forearm_angle(self, landmarks, side: str = 'right') -> Optional[float]:
+        """
+        計算前臂角度（肘關節屈曲角度）
+
+        REBA Step 8: 肘關節屈曲程度
+        0° = 完全伸直, 90° = 直角彎曲, 180° = 完全折疊
+        與 REBA 圖表定義一致（所見即所得）
+
+        Args:
+            landmarks: MediaPipe pose landmarks
+            side: 'left' 或 'right'
+
+        Returns:
+            肘關節屈曲角度（度）或 None
         """
         if side == 'left':
             shoulder_idx = self.LEFT_SHOULDER
@@ -199,40 +237,24 @@ class AngleCalculator:
             shoulder_idx = self.RIGHT_SHOULDER
             elbow_idx = self.RIGHT_ELBOW
             wrist_idx = self.RIGHT_WRIST
-        
+
         # 提取關鍵點
         shoulder = self.extract_keypoint(landmarks, shoulder_idx)
         elbow = self.extract_keypoint(landmarks, elbow_idx)
         wrist = self.extract_keypoint(landmarks, wrist_idx)
-        
+
         if any(p is None for p in [shoulder, elbow, wrist]):
             return None
-        
-        # 計算角度
-        angle = self.calculate_angle(shoulder[:3], elbow[:3], wrist[:3])
-        
-        return angle
-    
-    def calculate_forearm_angle(self, landmarks, side: str = 'right') -> Optional[float]:
-        """
-        計算前臂角度（肘關節屈曲角度）
-        
-        Args:
-            landmarks: MediaPipe pose landmarks
-            side: 'left' 或 'right'
-            
-        Returns:
-            前臂角度（度）或 None
-        """
-        upper_arm_angle = self.calculate_upper_arm_angle(landmarks, side)
-        
-        if upper_arm_angle is None:
-            return None
-        
-        # 前臂角度 = 180° - 上臂角度
-        forearm_angle = 180.0 - upper_arm_angle
-        
-        return forearm_angle
+
+        # 計算肘關節內角（頂點在肘部）
+        inner_angle = self.calculate_angle(shoulder[:3], elbow[:3], wrist[:3])
+
+        # 轉換為 REBA 圖表定義的屈曲角度
+        # 180° 內角 = 0° 屈曲（完全伸直）
+        # 90° 內角 = 90° 屈曲（直角彎曲）
+        flexion_angle = abs(180.0 - inner_angle)
+
+        return flexion_angle
     
     def calculate_wrist_angle(self, landmarks, side: str = 'right') -> Optional[float]:
         """
@@ -272,14 +294,18 @@ class AngleCalculator:
     
     def calculate_leg_angle(self, landmarks, side: str = 'right') -> Optional[float]:
         """
-        計算腿部角度（臀部-膝蓋-腳踝）
-        
+        計算腿部角度（膝關節屈曲角度）
+
+        REBA Step 3: 膝關節彎曲程度
+        0° = 完全伸直, 90° = 直角彎曲
+        與 REBA 圖表定義一致（所見即所得）
+
         Args:
             landmarks: MediaPipe pose landmarks
             side: 'left' 或 'right'
-            
+
         Returns:
-            腿部角度（度）或 None
+            膝關節屈曲角度（度）或 None
         """
         if side == 'left':
             hip_idx = self.LEFT_HIP
@@ -289,19 +315,24 @@ class AngleCalculator:
             hip_idx = self.RIGHT_HIP
             knee_idx = self.RIGHT_KNEE
             ankle_idx = self.RIGHT_ANKLE
-        
+
         # 提取關鍵點
         hip = self.extract_keypoint(landmarks, hip_idx)
         knee = self.extract_keypoint(landmarks, knee_idx)
         ankle = self.extract_keypoint(landmarks, ankle_idx)
-        
+
         if any(p is None for p in [hip, knee, ankle]):
             return None
-        
-        # 計算角度
-        angle = self.calculate_angle(hip[:3], knee[:3], ankle[:3])
-        
-        return angle
+
+        # 計算膝關節內角
+        inner_angle = self.calculate_angle(hip[:3], knee[:3], ankle[:3])
+
+        # 轉換為 REBA 圖表定義的屈曲角度
+        # 180° 內角 = 0° 屈曲（完全伸直）
+        # 90° 內角 = 90° 屈曲（直角彎曲）
+        flexion_angle = abs(180.0 - inner_angle)
+
+        return flexion_angle
     
     def calculate_all_angles(self, landmarks, side: str = 'right') -> Dict[str, Optional[float]]:
         """
