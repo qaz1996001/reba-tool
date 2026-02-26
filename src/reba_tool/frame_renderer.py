@@ -133,9 +133,12 @@ class FrameRenderer:
             cv2.line(frame, eye_center, shoulder_center, cfg.COLOR_NECK, cfg.ANGLE_LINE_THICKNESS)
 
             if show_values:
-                mid_point = ((eye_center[0] + shoulder_center[0]) // 2, (eye_center[1] + shoulder_center[1]) // 2)
+                # 頸部標籤放在靠近眼睛的位置（眼肩距離 1/4 處），避免與上臂標籤重疊
+                mid_y = eye_center[1] - (shoulder_center[1] - eye_center[1])
+                offset_x = 100 if side == 'right' else -100
+                text_pos = (shoulder_center[0] + offset_x, mid_y)
                 text_items.append({
-                    'text': f"{angles['neck']:.1f}\u00b0", 'position': mid_point,
+                    'text': f"{angles['neck']:.1f}\u00b0", 'position': text_pos,
                     'font': self.font_chinese_small, 'color': cfg.COLOR_NECK,
                     'bg_style': 'transparent',
                 })
@@ -153,9 +156,11 @@ class FrameRenderer:
             cv2.line(frame, shoulder_center, hip_center, cfg.COLOR_TRUNK, cfg.ANGLE_LINE_THICKNESS)
 
             if show_values:
-                mid_point = ((shoulder_center[0] + hip_center[0]) // 2, (shoulder_center[1] + hip_center[1]) // 2)
+                mid_y = (shoulder_center[1] + hip_center[1]) // 2
+                offset_x = -80 if side == 'right' else 50
+                text_pos = (hip_center[0] + offset_x, mid_y)
                 text_items.append({
-                    'text': f"{angles['trunk']:.1f}\u00b0", 'position': mid_point,
+                    'text': f"{angles['trunk']:.1f}\u00b0", 'position': text_pos,
                     'font': self.font_chinese_small, 'color': cfg.COLOR_TRUNK,
                     'bg_style': 'transparent',
                 })

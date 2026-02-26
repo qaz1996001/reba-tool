@@ -189,6 +189,7 @@ Rectangle {
         // ── Hover 播放控制列 ──
         Rectangle {
             id: controlBar
+            z: 1
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom

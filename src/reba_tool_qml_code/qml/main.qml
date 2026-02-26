@@ -52,7 +52,7 @@ ApplicationWindow {
             dataBridge.log("選擇影片: " + path.split("/").pop());
             videoBridge.startVideo(path);
             videoBridge.setParameters(settingsBridge.side, settingsBridge.loadWeight, settingsBridge.coupling);
-            videoBridge.setDisplayOptions(settingsBridge.showAngleLines, settingsBridge.showAngleValues);
+            videoBridge.setDisplayOptions(settingsBridge.showAngleLines, settingsBridge.showAngleValues, settingsBridge.showSkeleton);
         }
     }
 
@@ -151,7 +151,7 @@ ApplicationWindow {
                     dataBridge.log("正在開啟攝影機...");
                     videoBridge.startCamera();
                     videoBridge.setParameters(settingsBridge.side, settingsBridge.loadWeight, settingsBridge.coupling);
-                    videoBridge.setDisplayOptions(settingsBridge.showAngleLines, settingsBridge.showAngleValues);
+                    videoBridge.setDisplayOptions(settingsBridge.showAngleLines, settingsBridge.showAngleValues, settingsBridge.showSkeleton);
                 }
                 onVideoClicked: {
                     videoFileDialog.open();
