@@ -166,10 +166,10 @@ class VideoBridge(QObject):
         """即時更新評估參數"""
         self._controller.set_parameters(side, load_weight, force_coupling)
 
-    @Slot(bool, bool)
-    def setDisplayOptions(self, show_lines, show_values):
+    @Slot(bool, bool, bool)
+    def setDisplayOptions(self, show_lines, show_values, show_skeleton):
         """即時更新顯示選項"""
-        self._controller.set_display_options(show_lines, show_values)
+        self._controller.set_display_options(show_lines, show_values, show_skeleton)
 
     @Slot(str)
     def saveImage(self, path):
@@ -245,11 +245,12 @@ class VideoBridge(QObject):
     def _start_processing(self, video_source,
                           side='right', load_weight=0.0,
                           force_coupling='good',
-                          show_lines=True, show_values=True):
+                          show_lines=True, show_values=True,
+                          show_skeleton=True):
         """啟動處理管線"""
         self._controller.start(
             video_source, side, load_weight, force_coupling,
-            show_lines, show_values
+            show_lines, show_values, show_skeleton
         )
 
         self._frame_counter = 0
@@ -336,16 +337,17 @@ class VideoBridge(QObject):
         self.currentFrameChanged.emit()
         self.totalFramesChanged.emit()
 
-    def start_with_params(self, video_source, side, load_weight, force_coupling,
-                          show_lines, show_values):
-        """帶完整參數啟動（由 main.py 或 QML 呼叫）"""
+    @Slot(str, str, float, str, bool, bool, bool)
+    def startWithSettings(self, path, side, load_weight, force_coupling,
+                          show_lines, show_values, show_skeleton):
+        """帶完整參數啟動影片（從 QML 呼叫，避免啟動時參數競態）"""
         if self._controller.is_processing:
             return
-        self._video_source = video_source or ""
+        self._video_source = path or ""
         self.videoSourceChanged.emit()
         self._start_processing(
-            video_source, side, load_weight, force_coupling,
-            show_lines, show_values
+            path if path else None, side, load_weight, force_coupling,
+            show_lines, show_values, show_skeleton
         )
 
     def cleanup(self):

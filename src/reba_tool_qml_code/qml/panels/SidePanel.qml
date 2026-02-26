@@ -227,6 +227,36 @@ Rectangle {
                 }
                 onClicked: root.recordToggleClicked()
             }
+
+            // ── 顯示選項 ──
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: Style.Theme.surface800
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+                CheckBox {
+                    text: "骨架"
+                    font.pixelSize: Style.Theme.fontSm
+                    checked: settingsBridge.showSkeleton
+                    onToggled: settingsBridge.setShowSkeleton(checked)
+                }
+                CheckBox {
+                    text: "角度線"
+                    font.pixelSize: Style.Theme.fontSm
+                    checked: settingsBridge.showAngleLines
+                    onToggled: settingsBridge.setShowAngleLines(checked)
+                }
+                CheckBox {
+                    text: "角度值"
+                    font.pixelSize: Style.Theme.fontSm
+                    checked: settingsBridge.showAngleValues
+                    onToggled: settingsBridge.setShowAngleValues(checked)
+                }
+            }
         }
     }
 }

@@ -16,11 +16,12 @@ class SettingsBridge(QObject):
     couplingChanged = Signal()
     showAngleLinesChanged = Signal()
     showAngleValuesChanged = Signal()
+    showSkeletonChanged = Signal()
     dataLockedChanged = Signal()
 
     # 參數變更通知（VideoBridge 監聽此信號）
     parametersChanged = Signal(str, float, str)
-    displayOptionsChanged = Signal(bool, bool)
+    displayOptionsChanged = Signal(bool, bool, bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -29,6 +30,7 @@ class SettingsBridge(QObject):
         self._coupling = "good"
         self._show_angle_lines = True
         self._show_angle_values = True
+        self._show_skeleton = True
         self._data_locked = False
 
     # ========== Properties ==========
@@ -75,7 +77,8 @@ class SettingsBridge(QObject):
         if self._show_angle_lines != value:
             self._show_angle_lines = value
             self.showAngleLinesChanged.emit()
-            self.displayOptionsChanged.emit(self._show_angle_lines, self._show_angle_values)
+            self.displayOptionsChanged.emit(
+                self._show_angle_lines, self._show_angle_values, self._show_skeleton)
 
     @Property(bool, notify=showAngleValuesChanged)
     def showAngleValues(self):
@@ -86,7 +89,20 @@ class SettingsBridge(QObject):
         if self._show_angle_values != value:
             self._show_angle_values = value
             self.showAngleValuesChanged.emit()
-            self.displayOptionsChanged.emit(self._show_angle_lines, self._show_angle_values)
+            self.displayOptionsChanged.emit(
+                self._show_angle_lines, self._show_angle_values, self._show_skeleton)
+
+    @Property(bool, notify=showSkeletonChanged)
+    def showSkeleton(self):
+        return self._show_skeleton
+
+    @showSkeleton.setter
+    def showSkeleton(self, value):
+        if self._show_skeleton != value:
+            self._show_skeleton = value
+            self.showSkeletonChanged.emit()
+            self.displayOptionsChanged.emit(
+                self._show_angle_lines, self._show_angle_values, self._show_skeleton)
 
     @Property(bool, notify=dataLockedChanged)
     def dataLocked(self):
@@ -119,6 +135,10 @@ class SettingsBridge(QObject):
     @Slot(bool)
     def setShowAngleValues(self, value):
         self.showAngleValues = value
+
+    @Slot(bool)
+    def setShowSkeleton(self, value):
+        self.showSkeleton = value
 
     @Slot(bool)
     def setDataLocked(self, value):

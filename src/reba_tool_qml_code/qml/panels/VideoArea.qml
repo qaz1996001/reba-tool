@@ -25,6 +25,9 @@ Rectangle {
     property string totalTime: "00:00"
     property bool isPlaying: false
 
+    // ── 內部狀態 ──
+    property real _pendingSeek: -1
+
     // ── 信號（向上傳遞操作）──
     signal cameraClicked()
     signal videoClicked()
@@ -228,26 +231,52 @@ Rectangle {
                     }
                 }
 
-                // 進度條（可點擊 seek）
-                Rectangle {
+                // 進度條（可點擊跳轉 + 拖曳 seek）
+                Slider {
+                    id: seekSlider
                     Layout.fillWidth: true
-                    height: 6
-                    radius: 3
-                    color: Style.Theme.surface800
+                    from: 0; to: 1; stepSize: 0
+                    value: pressed ? value : root.progress
 
-                    Rectangle {
-                        width: parent.width * root.progress
-                        height: parent.height
-                        radius: 3
-                        color: Style.Theme.accentNeonBlue
+                    onMoved: {
+                        root._pendingSeek = seekSlider.value
+                        seekTimer.restart()
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: function(mouse) {
-                            var ratio = mouse.x / width;
-                            root.seekRequested(Math.max(0, Math.min(1, ratio)));
+                    background: Rectangle {
+                        x: seekSlider.leftPadding
+                        y: seekSlider.topPadding + seekSlider.availableHeight / 2 - height / 2
+                        width: seekSlider.availableWidth
+                        height: 6; radius: 3
+                        color: Style.Theme.surface800
+
+                        Rectangle {
+                            width: seekSlider.visualPosition * parent.width
+                            height: parent.height; radius: 3
+                            color: Style.Theme.accentNeonBlue
+                        }
+                    }
+
+                    handle: Rectangle {
+                        x: seekSlider.leftPadding + seekSlider.visualPosition * (seekSlider.availableWidth - width)
+                        y: seekSlider.topPadding + seekSlider.availableHeight / 2 - height / 2
+                        width: 14; height: 14; radius: 7
+                        color: seekSlider.pressed ? Style.Theme.accentNeonBlue : "#FFFFFF"
+                        border.color: Style.Theme.accentNeonBlue; border.width: 2
+                        visible: seekSlider.hovered || seekSlider.pressed
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                    }
+                }
+
+                // Seek 節流計時器（100ms debounce）
+                Timer {
+                    id: seekTimer
+                    interval: 100
+                    onTriggered: {
+                        if (root._pendingSeek >= 0) {
+                            root.seekRequested(root._pendingSeek)
+                            root._pendingSeek = -1
                         }
                     }
                 }

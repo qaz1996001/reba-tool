@@ -46,6 +46,7 @@ class VideoPipeline:
         # 顯示選項
         self._show_angle_lines: bool = True
         self._show_angle_values: bool = True
+        self._show_skeleton: bool = True
 
         # 影片控制
         self._total_frames: int = 0
@@ -72,10 +73,11 @@ class VideoPipeline:
         self._load_weight = load_weight
         self._force_coupling = force_coupling
 
-    def set_display_options(self, show_lines: bool, show_values: bool):
+    def set_display_options(self, show_lines: bool, show_values: bool, show_skeleton: bool = True):
         """設定顯示選項"""
         self._show_angle_lines = show_lines
         self._show_angle_values = show_values
+        self._show_skeleton = show_skeleton
 
     def seek_frame(self, frame_number: int):
         """跳轉到指定幀"""
@@ -262,11 +264,12 @@ class VideoPipeline:
         details = {}
 
         if results.pose_landmarks:
-            self._renderer.draw_pose_landmarks(
-                frame, results.pose_landmarks,
-                self._mp_drawing, self._mp_holistic, self._mp_drawing_styles,
-                side=self._side
-            )
+            if self._show_skeleton:
+                self._renderer.draw_pose_landmarks(
+                    frame, results.pose_landmarks,
+                    self._mp_drawing, self._mp_holistic, self._mp_drawing_styles,
+                    side=self._side
+                )
             angles = self._angle_calc.calculate_all_angles(results.pose_landmarks, self._side)
             frame, angle_text_items = self._renderer.draw_angle_lines(
                 frame, results.pose_landmarks, angles,

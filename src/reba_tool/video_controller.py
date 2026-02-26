@@ -68,7 +68,8 @@ class VideoController:
 
     # ========== 控制方法 ==========
 
-    def start(self, source, side, load_weight, force_coupling, show_lines, show_values):
+    def start(self, source, side, load_weight, force_coupling,
+              show_lines, show_values, show_skeleton=True):
         """
         準備管線以便啟動。呼叫端負責建立 worker thread 並呼叫 pipeline.run()。
 
@@ -79,11 +80,12 @@ class VideoController:
             force_coupling: 握持品質
             show_lines: 是否顯示角度線
             show_values: 是否顯示角度數值
+            show_skeleton: 是否顯示 MediaPipe 骨架
         """
         self._pipeline = VideoPipeline(self._event_bus, self._config)
         self._pipeline.set_source(source)
         self._pipeline.set_parameters(side, load_weight, force_coupling)
-        self._pipeline.set_display_options(show_lines, show_values)
+        self._pipeline.set_display_options(show_lines, show_values, show_skeleton)
 
         self._data_logger.clear_buffer()
         self._frame_count = 0
@@ -115,10 +117,10 @@ class VideoController:
         if self._pipeline:
             self._pipeline.set_parameters(side, load_weight, force_coupling)
 
-    def set_display_options(self, show_lines: bool, show_values: bool):
+    def set_display_options(self, show_lines: bool, show_values: bool, show_skeleton: bool = True):
         """即時更新顯示選項"""
         if self._pipeline:
-            self._pipeline.set_display_options(show_lines, show_values)
+            self._pipeline.set_display_options(show_lines, show_values, show_skeleton)
 
     # ========== 資料方法 ==========
 
