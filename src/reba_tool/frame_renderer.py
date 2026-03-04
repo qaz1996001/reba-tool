@@ -316,6 +316,11 @@ class FrameRenderer:
                 x2 = min(bbox[2] + pad, img_pil.width)
                 y2 = min(bbox[3] + pad, img_pil.height)
 
+                if x2 <= x1 or y2 <= y1:
+                    draw = ImageDraw.Draw(img_pil)
+                    draw.text(position, text, font=font, fill=pil_color)
+                    continue
+
                 region = img_pil.crop((x1, y1, x2, y2)).convert('RGBA')
                 overlay = Image.new('RGBA', region.size, (0, 0, 0, cfg.TEXT_BG_ALPHA))
                 region = Image.alpha_composite(region, overlay).convert('RGB')
